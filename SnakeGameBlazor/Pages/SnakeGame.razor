@@ -70,6 +70,7 @@
             }
         }
         InitializeSnake();
+        SpawnFood();
     }
 
     async Task PlaySnake()
@@ -86,7 +87,7 @@
 
     async Task Move()
     {
-        var tail = new Cell
+        var snakeTail = new Cell
         {
             x = _snake.Cells[_snake.Length-1].x,
             y = _snake.Cells[_snake.Length-1].y
@@ -117,8 +118,7 @@
                 break;
         }
 
-        
-            _cells[tail.x, tail.y] = GridColors.Green;
+        EatFoodOrTurnTailIntoGround(snakeTail);
 
         foreach (var cell in _snake.Cells)
         {
@@ -176,6 +176,8 @@
 
     private void InitializeSnake()
     {
+        _snake.Length = 3;
+
         for (int i = 0; i < _snake.Length; i++)
         {
             _snake.Cells.Add(new Cell
@@ -183,9 +185,42 @@
                 x = _gridSize / 2 + i,
                 y = _gridSize / 2
             });
-            _snake.Length = 3;
 
             _cells[_gridSize / 2 + i, _gridSize / 2] = GridColors.Blue;
+        }
+    }
+
+    private void SpawnFood()
+    {
+        var generator = new Random();
+        var foodCell = new Cell
+            {
+                x = generator.Next(0, 9),
+                y = generator.Next(0, 9)
+            };
+        while (_snake.Cells.Any(snakeCell => snakeCell.x == foodCell.x && snakeCell.y == foodCell.y))
+        {
+            foodCell.x = generator.Next(0, 9);
+            foodCell.y = generator.Next(0, 9);
+        }
+        _cells[foodCell.x, foodCell.y] = GridColors.Beer;
+    }
+
+    private void EatFoodOrTurnTailIntoGround(Cell snakeTail)
+    {
+        if (_cells[_snake.Cells[0].x, _snake.Cells[0].y] == GridColors.Beer)
+        {
+            _snake.Cells.Add(new Cell
+                {
+                    x = snakeTail.x,
+                    y = snakeTail.y
+                });
+            _snake.Length++;
+            SpawnFood();
+        }
+        else
+        {
+            _cells[snakeTail.x, snakeTail.y] = GridColors.Green;
         }
     }
 }
