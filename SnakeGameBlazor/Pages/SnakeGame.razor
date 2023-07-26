@@ -1,0 +1,191 @@
+﻿@page "/snake"
+@using Microsoft.AspNetCore.Components;
+@using SnakeGameBlazor.Data;
+@using SnakeGameBlazor.Constants;
+
+<PageTitle>Snake</PageTitle>
+<div class="containter" @onkeydown="ChangeDirection" tabindex="0">
+
+    <h1>Snake</h1>
+
+    <p>Current direction: @_direction</p>
+
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-4 custom-no-spaces">
+                @for (int i = _gridSize; i > 0; i--)
+                {
+                    <div class="row">
+                        @for (int j = 0; j < _gridSize; j++)
+                        {
+                            <div class="col p-0 m-0">
+                                <img src=@("/images/"+ _cells[j,i-1] + ".png") class="img-fluid custom-no-spaces" />
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="container col-4">
+                <table>
+                    <tr>
+                        <td>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary w-100" @onclick="GoUp">Up</button>
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <button class="btn btn-primary w-100" @onclick="GoLeft">Left</button>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary w-100" @onclick="GoDown">Down</button>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary w-100" @onclick="GoRight">Right</button>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _direction;
+    private const int _gridSize = 10;
+    private string[,] _cells = new string[_gridSize, _gridSize];
+    private bool _isRunning;
+    private Snake _snake = new Snake();
+
+    protected override void OnInitialized()
+    {
+        for (int i = 0; i < _gridSize; i++)
+        {
+            for (int j = 0; j < _gridSize; j++)
+            {
+                _cells[i, j] = GridColors.Green;
+            }
+        }
+        InitializeSnake();
+    }
+
+    async Task PlaySnake()
+    {
+        _isRunning = true;
+
+        while (true)
+        {
+            await Task.Delay(200);
+            await Move();
+            StateHasChanged();
+        }
+    }
+
+    async Task Move()
+    {
+        var tail = new Cell
+        {
+            x = _snake.Cells[_snake.Length-1].x,
+            y = _snake.Cells[_snake.Length-1].y
+        };
+
+        for (int i = _snake.Length - 1; i > 0; i--)
+        {
+            _snake.Cells[i].x = _snake.Cells[i - 1].x;
+            _snake.Cells[i].y = _snake.Cells[i - 1].y;
+        }
+
+        switch (_direction)
+        {
+            case Directions.Up:
+                _snake.Cells[0].y = _snake.Cells[0].y + 1;
+                break;
+
+            case Directions.Down:
+                _snake.Cells[0].y = _snake.Cells[0].y - 1;
+                break;
+
+            case Directions.Left:
+                _snake.Cells[0].x = _snake.Cells[0].x - 1;
+                break;
+
+            case Directions.Right:
+                _snake.Cells[0].x = _snake.Cells[0].x + 1;
+                break;
+        }
+
+        
+            _cells[tail.x, tail.y] = GridColors.Green;
+
+        foreach (var cell in _snake.Cells)
+        {
+            _cells[cell.x, cell.y] = GridColors.Blue;
+        }
+    }
+
+    private async void ChangeDirection(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case Directions.ArrowUp:
+                GoUp();
+                break;
+
+            case Directions.ArrowDown:
+                GoDown();
+                break;
+
+            case Directions.ArrowLeft:
+                GoLeft();
+                break;
+
+            case Directions.ArrowRight:
+                GoRight();
+                break;
+        }
+
+        if (!_isRunning)
+        {
+            await PlaySnake();
+        }
+    }
+
+    private void GoUp()
+    {
+        if (_direction != Directions.Down)
+            _direction = Directions.Up;
+    }
+    private void GoDown()
+    {
+        if (_direction != Directions.Up)
+            _direction = Directions.Down;
+    }
+    private void GoLeft()
+    {
+        if (_direction != Directions.Right)
+            _direction = Directions.Left;
+    }
+    private void GoRight()
+    {
+        if (_direction != Directions.Left)
+            _direction = Directions.Right;
+    }
+
+    private void InitializeSnake()
+    {
+        for (int i = 0; i < _snake.Length; i++)
+        {
+            _snake.Cells.Add(new Cell
+            {
+                x = _gridSize / 2 + i,
+                y = _gridSize / 2
+            });
+            _snake.Length = 3;
+
+            _cells[_gridSize / 2 + i, _gridSize / 2] = GridColors.Blue;
+        }
+    }
+}
