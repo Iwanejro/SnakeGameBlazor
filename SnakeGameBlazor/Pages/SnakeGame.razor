@@ -11,44 +11,18 @@
     <p>Current direction: @_direction</p>
 
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-12 custom-no-spaces">
-                @for (int i = _gridSize; i > 0; i--)
-                {
-                    <div class="row">
-                        @for (int j = 0; j < _gridSize; j++)
-                        {
-                            <div class="col p-0 m-0">
-                                <img src=@("/images/"+ _cells[j,i-1] + ".png") class="img-fluid custom-no-spaces" />
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
-            @*<div class="container col-4">
-                <table>
-                    <tr>
-                        <td>
-                        </td>
-                        <td>
-                            <button class="btn btn-primary w-100" @onclick="GoUp">Up</button>
-                        </td>
-                        <td>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <button class="btn btn-primary w-100" @onclick="GoLeft">Left</button>
-                        </td>
-                        <td>
-                            <button class="btn btn-primary w-100" @onclick="GoDown">Down</button>
-                        </td>
-                        <td>
-                            <button class="btn btn-primary w-100" @onclick="GoRight">Right</button>
-                        </td>
-                    </tr>
-                </table>
-            </div>*@
+        <div class="col-4 custom-no-spaces">
+            @for (int i = _gridSize; i > 0; i--)
+            {
+                <div class="row">
+                    @for (int j = 0; j < _gridSize; j++)
+                    {
+                        <div class="col p-0 m-0">
+                            <img src=@("/images/"+ _cells[j,i-1] + ".png") class="img-fluid custom-no-spaces" />
+                        </div>
+                    }
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -56,10 +30,9 @@
 @code {
     private string _direction;
     private string _snakeHeadDirection;
-    private const int _gridSize = 20;
+    private const int _gridSize = 10;
     private string[,] _cells = new string[_gridSize, _gridSize];
     private bool _isRunning;
-    private bool _turningEnabled;
     private Snake _snake = new Snake();
 
     protected override void OnInitialized()
@@ -81,8 +54,7 @@
 
         while (true)
         {
-
-            await Task.Delay(100);
+            await Task.Delay(300);
 
             await NextAction();
 
@@ -92,17 +64,11 @@
 
     async Task NextAction()
     {
-        var snakeTail = new Cell
-        {
-            x = _snake.Cells[_snake.Length-1].x,
-            y = _snake.Cells[_snake.Length-1].y
-        };
-
         MoveSnakeBody();
 
         MoveSnakeHead();
 
-        MakeSnakeLongerOrTurnTailIntoGround(snakeTail);
+        CheckSnakeHeadPosition();
 
         foreach (var cell in _snake.Cells)
         {
@@ -112,41 +78,35 @@
 
     private async void ChangeDirection(KeyboardEventArgs e)
     {
-        if (!_isRunning)
-            _turningEnabled = true;
-
-        if (_turningEnabled)
+        switch (e.Key)
         {
-            switch (e.Key)
-            {
-                case Directions.ArrowUp:
-                    if (_snakeHeadDirection != Directions.Down)
-                    {
-                        _direction = Directions.Up;
-                    }
-                    break;
+            case Directions.ArrowUp:
+                if (_snakeHeadDirection != Directions.Down)
+                {
+                    _direction = Directions.Up;
+                }
+                break;
 
-                case Directions.ArrowDown:
-                    if (_snakeHeadDirection != Directions.Up)
-                    {
-                        _direction = Directions.Down;
-                    }
-                    break;
+            case Directions.ArrowDown:
+                if (_snakeHeadDirection != Directions.Up)
+                {
+                    _direction = Directions.Down;
+                }
+                break;
 
-                case Directions.ArrowLeft:
-                    if (_snakeHeadDirection != Directions.Right)
-                    {
-                        _direction = Directions.Left;
-                    }
-                    break;
+            case Directions.ArrowLeft:
+                if (_snakeHeadDirection != Directions.Right)
+                {
+                    _direction = Directions.Left;
+                }
+                break;
 
-                case Directions.ArrowRight:
-                    if (_snakeHeadDirection != Directions.Left)
-                    {
-                        _direction = Directions.Right;
-                    }
-                    break;
-            }
+            case Directions.ArrowRight:
+                if (_snakeHeadDirection != Directions.Left)
+                {
+                    _direction = Directions.Right;
+                }
+                break;
         }
 
         if (!_isRunning)
@@ -156,6 +116,8 @@
     private void InitializeSnake()
     {
         _snake.Length = 3;
+        _snake.Head.x = _gridSize / 2;
+        _snake.Head.y = _gridSize / 2;
 
         for (int i = 0; i < _snake.Length; i++)
         {
@@ -167,10 +129,16 @@
 
             _cells[_gridSize / 2 + i, _gridSize / 2] = GridColors.Blue;
         }
+
+        _snake.Tail.x = _gridSize / 2 + _snake.Length - 1;
+        _snake.Tail.y = _gridSize / 2;
     }
 
     private void MoveSnakeBody()
     {
+        _snake.Tail.x = _snake.Cells[_snake.Length - 1].x;
+        _snake.Tail.y = _snake.Cells[_snake.Length - 1].y;
+
         for (int i = _snake.Length - 1; i > 0; i--)
         {
             _snake.Cells[i].x = _snake.Cells[i - 1].x;
@@ -202,7 +170,28 @@
                 _snakeHeadDirection = Directions.Right;
                 break;
         }
-        
+        _snake.Head.x = _snake.Cells[0].x;
+        _snake.Head.y = _snake.Cells[0].y;
+
+    }
+
+    private void CheckSnakeHeadPosition()
+    {
+        switch (_cells[_snake.Head.x, _snake.Head.y])
+        {
+            case GridColors.Blue:
+                //GameOver();
+                break;
+
+            case GridColors.Beer:
+                MakeSnakeLonger();
+                SpawnFood();
+                break;
+
+            case GridColors.Green:
+                _cells[_snake.Tail.x, _snake.Tail.y] = GridColors.Green;
+                break;
+        }
     }
 
     private void SpawnFood()
@@ -221,21 +210,14 @@
         _cells[foodCell.x, foodCell.y] = GridColors.Beer;
     }
 
-    private void MakeSnakeLongerOrTurnTailIntoGround(Cell snakeTail)
+    private void MakeSnakeLonger()
     {
-        if (_cells[_snake.Cells[0].x, _snake.Cells[0].y] == GridColors.Beer)
-        {
-            _snake.Cells.Add(new Cell
-                {
-                    x = snakeTail.x,
-                    y = snakeTail.y
-                });
-            _snake.Length++;
-            SpawnFood();
-        }
-        else
-        {
-            _cells[snakeTail.x, snakeTail.y] = GridColors.Green;
-        }
+        _snake.Cells.Add(new Cell
+            {
+                x = _snake.Tail.x,
+                y = _snake.Tail.y
+            });
+        _snake.Length++;
     }
+
 }
