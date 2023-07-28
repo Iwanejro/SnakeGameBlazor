@@ -6,23 +6,29 @@
 <PageTitle>Snake</PageTitle>
 <div class="containter" @onkeydown="ChangeDirection" tabindex="0">
 
-    <h1>Snake</h1>
 
     <p>Current direction: @_direction</p>
 
     <div class="container">
-        <div class="col-6 custom-no-spaces">
-            @for (int i = _gridSize; i > 0; i--)
-            {
-                <div class="row">
-                    @for (int j = 0; j < _gridSize; j++)
-                    {
-                        <div class="col p-0 m-0">
-                            <img src=@("/images/"+ _cells[j,i-1] + ".png") class="img-fluid custom-no-spaces" />
-                        </div>
-                    }
-                </div>
-            }
+        <div class="row align-items-center">
+            <div class="col-6 custom-no-spaces">
+                @for (int i = _gridSize; i > 0; i--)
+                {
+                    <div class="row">
+                        @for (int j = 0; j < _gridSize; j++)
+                        {
+                            <div class="col p-0 m-0">
+                                <img src=@("/images/"+ _cells[j,i-1] + ".png") class="img-fluid custom-no-spaces" />
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="col-6 text-center">
+                <h1 class="fw-bold">SCORE</h1>
+                <br/>
+                <h1 class="fw-bold">@_score</h1>
+            </div>
         </div>
     </div>
     <br /><br />
@@ -31,7 +37,8 @@
 @code {
     private string _direction;
     private string _snakeHeadDirection;
-    private const int _gridSize = 11;
+    private const int _gridSize = 14;
+    private int _score;
     private string[,] _cells = new string[_gridSize, _gridSize];
     private bool _isRunning;
     private Snake _snake = new Snake();
@@ -259,6 +266,7 @@
                 y = _snake.Tail.y
             });
         _snake.Length++;
+        _score++;
     }
 
     private async void GameOver()
@@ -267,6 +275,7 @@
         await FlashSnake();
         OnInitialized();
         StateHasChanged();
+        _score = 0;
     }
 
     private async Task FlashSnake()
