@@ -35,6 +35,21 @@
     private bool _isRunning;
     private Snake _snake = new Snake();
 
+
+    async Task PlaySnake()
+    {
+        _isRunning = true;
+
+        while (_isRunning)
+        {
+            await Task.Delay(150);
+
+            await NextAction();
+
+            StateHasChanged();
+        }
+    }
+
     protected override void OnInitialized()
     {
         for (int i = 0; i < _gridSize; i++)
@@ -48,20 +63,6 @@
         SpawnFood();
     }
 
-    async Task PlaySnake()
-    {
-        _isRunning = true;
-
-        while (true)
-        {
-            await Task.Delay(300);
-
-            await NextAction();
-
-            StateHasChanged();
-        }
-    }
-
     async Task NextAction()
     {
         MoveSnakeBody();
@@ -70,9 +71,12 @@
 
         CheckSnakeHeadPosition();
 
-        foreach (var cell in _snake.Cells)
+        if (_isRunning)
         {
-            _cells[cell.x, cell.y] = GridColors.Blue;
+            foreach (var cell in _snake.Cells)
+            {
+                _cells[cell.x, cell.y] = GridColors.Blue;
+            }
         }
     }
 
@@ -81,28 +85,28 @@
         switch (e.Key)
         {
             case Directions.ArrowUp:
-                if (_snakeHeadDirection != Directions.Down)
+                if (_snakeHeadDirection != Directions.Down || !_isRunning)
                 {
                     _direction = Directions.Up;
                 }
                 break;
 
             case Directions.ArrowDown:
-                if (_snakeHeadDirection != Directions.Up)
+                if (_snakeHeadDirection != Directions.Up || !_isRunning)
                 {
                     _direction = Directions.Down;
                 }
                 break;
 
             case Directions.ArrowLeft:
-                if (_snakeHeadDirection != Directions.Right)
+                if (_snakeHeadDirection != Directions.Right || !_isRunning)
                 {
                     _direction = Directions.Left;
                 }
                 break;
 
             case Directions.ArrowRight:
-                if (_snakeHeadDirection != Directions.Left)
+                if (_snakeHeadDirection != Directions.Left || !_isRunning)
                 {
                     _direction = Directions.Right;
                 }
@@ -115,6 +119,13 @@
 
     private void InitializeSnake()
     {
+        if (_snake.Cells.Count != 0)
+        {
+            for (int i = _snake.Cells.Count; i > 0; i--)
+            {
+                _snake.Cells.RemoveAt(0);
+            }
+        }
         _snake.Length = 3;
         _snake.Head.x = _gridSize / 2;
         _snake.Head.y = _gridSize / 2;
@@ -123,11 +134,11 @@
         {
             _snake.Cells.Add(new Cell
             {
-                x = _gridSize / 2 + i,
+                x = _gridSize / 2,
                 y = _gridSize / 2
             });
 
-            _cells[_gridSize / 2 + i, _gridSize / 2] = GridColors.Blue;
+            _cells[_gridSize / 2, _gridSize / 2] = GridColors.Blue;
         }
 
         _snake.Tail.x = _gridSize / 2 + _snake.Length - 1;
@@ -175,12 +186,12 @@
 
     }
 
-    private void CheckSnakeHeadPosition()
+    private async void CheckSnakeHeadPosition()
     {
         switch (_cells[_snake.Head.x, _snake.Head.y])
         {
             case GridColors.Blue:
-                //GameOver();
+                GameOver();
                 break;
 
             case GridColors.Beer:
@@ -220,4 +231,43 @@
         _snake.Length++;
     }
 
+    private async void GameOver()
+    {
+        _isRunning = false;
+        await FlashSnake();
+        OnInitialized();
+        StateHasChanged();
+    }
+
+    private async Task FlashSnake()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            MakeSnakeRed();
+            StateHasChanged();
+            await Task.Delay(200);
+
+            MakeSnakeBlue();
+            StateHasChanged();
+            await Task.Delay(200);
+        }
+    }
+
+    private void MakeSnakeRed()
+    {
+        foreach (var cell in _snake.Cells)
+        {
+            _cells[cell.x, cell.y] = GridColors.Red;
+        }
+        _cells[_snake.Tail.x, _snake.Tail.y] = GridColors.Red;
+    }
+
+    private void MakeSnakeBlue()
+    {
+        foreach (var cell in _snake.Cells)
+        {
+            _cells[cell.x, cell.y] = GridColors.Blue;
+        }
+        _cells[_snake.Tail.x, _snake.Tail.y] = GridColors.Blue;
+    } 
 }
