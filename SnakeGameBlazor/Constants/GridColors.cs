@@ -7,5 +7,6 @@
         public const string Green = "green";
         public const string Red = "red";
         public const string Beer = "beer";
+        public const string Kebab = "kebab";
     }
 }

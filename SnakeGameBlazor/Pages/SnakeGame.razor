@@ -71,7 +71,7 @@
 
         InitializeEdge();
         InitializeSnake();
-        SpawnFood();
+        SpawnFood(GridColors.Beer);
     }
 
     async Task NextAction()
@@ -233,7 +233,17 @@
 
             case GridColors.Beer:
                 MakeSnakeLonger();
-                SpawnFood();
+
+                if (_score%5 == 0)
+                {
+                    SpawnFood(GridColors.Kebab);
+                }
+                SpawnFood(GridColors.Beer);
+                break;
+
+            case GridColors.Kebab:
+                _score += 10;
+                _cells[_snake.Tail.x, _snake.Tail.y] = GridColors.Green;
                 break;
 
             case GridColors.Green:
@@ -242,7 +252,7 @@
         }
     }
 
-    private void SpawnFood()
+    private void SpawnFood(string foodName)
     {
         var generator = new Random();
         var foodCell = new Cell
@@ -250,12 +260,14 @@
                 x = generator.Next(1, _gridSize-2),
                 y = generator.Next(1, _gridSize-2)
             };
-        while (_snake.Cells.Any(snakeCell => snakeCell.x == foodCell.x && snakeCell.y == foodCell.y))
+        while (_snake.Cells.Any(snakeCell => snakeCell.x == foodCell.x && snakeCell.y == foodCell.y) || _cells[foodCell.x, foodCell.y] == GridColors.Beer)
         {
             foodCell.x = generator.Next(1, _gridSize - 2);
             foodCell.y = generator.Next(1, _gridSize - 2);
         }
-        _cells[foodCell.x, foodCell.y] = GridColors.Beer;
+
+        
+        _cells[foodCell.x, foodCell.y] = foodName;
     }
 
     private void MakeSnakeLonger()
@@ -268,6 +280,7 @@
         _snake.Length++;
         _score++;
     }
+
 
     private async void GameOver()
     {
