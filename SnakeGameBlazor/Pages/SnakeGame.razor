@@ -2,13 +2,10 @@
 @using Microsoft.AspNetCore.Components;
 @using SnakeGameBlazor.Data;
 @using SnakeGameBlazor.Constants;
+@using System.Linq;
 
 <PageTitle>Snake</PageTitle>
 <div class="containter" @onkeydown="ChangeDirection" tabindex="0">
-
-
-    <p>Current direction: @_direction</p>
-
     <div class="container">
         <div class="row align-items-center">
             <div class="col-6 custom-no-spaces">
@@ -25,9 +22,10 @@
                 }
             </div>
             <div class="col-6 text-center">
-                <h1 class="fw-bold">SCORE</h1>
-                <br/>
-                <h1 class="fw-bold">@_score</h1>
+                <h1 class="fw-bold">Beer Snake</h1>
+                <br />
+                <h1 class="fw-">SCORE</h1>
+                <h1 class="">@_score</h1>
             </div>
         </div>
     </div>
@@ -38,8 +36,11 @@
     private string _direction;
     private string _snakeHeadDirection;
     private const int _gridSize = 14; // size/2 == 0 !!!
-    private int _kebabFrequency = 10;
+    private int _kebabFrequency = 5;
     private int _score;
+    private int _movesCount;
+    private int _kebabTimeLeft;
+    private Cell _kebabCell = new Cell();
     private string[,] _cells = new string[_gridSize, _gridSize];
     private bool _isRunning;
     private Snake _snake = new Snake();
@@ -85,10 +86,18 @@
 
         if (_isRunning)
         {
-            foreach (var cell in _snake.Cells)
+            for (int i = 1; i < _snake.Length; i++)
             {
-                _cells[cell.x, cell.y] = GridColors.Blue;
+                _cells[_snake.Cells[i].x, _snake.Cells[i].y] = GridColors.Blue;
             }
+            //foreach (var cell in _snake.Cells)
+            //{
+            //    _cells[cell.x, cell.y] = GridColors.Blue;
+            //}
+            ChangeSnakeHeadPicture();
+
+            _movesCount++;
+            DeleteKebabOrDecreaseKebabTimeLeft();
         }
     }
 
@@ -150,8 +159,11 @@
             _cells[_gridSize / 2, _gridSize / 2] = GridColors.Blue;
         }
 
-        _snake.Tail.x = _gridSize / 2 + _snake.Length - 1;
+        _snake.Tail.x = _gridSize / 2;
         _snake.Tail.y = _gridSize / 2;
+
+        _cells[_snake.Head.x, _snake.Head.y] = GridColors.EyesDown;
+
     }
 
     private void InitializeEdge()
@@ -225,10 +237,11 @@
         switch (_cells[_snake.Head.x, _snake.Head.y])
         {
             case GridColors.Blue:
-                GameOver();
-                break;
-
             case GridColors.Black:
+            case GridColors.EyesDown:
+            case GridColors.EyesUp:
+            case GridColors.EyesLeft:
+            case GridColors.EyesRight:
                 GameOver();
                 break;
 
@@ -238,6 +251,7 @@
                 if (_score%_kebabFrequency == 0)
                 {
                     SpawnFood(GridColors.Kebab);
+                    _kebabTimeLeft = 2*_gridSize;
                 }
                 SpawnFood(GridColors.Beer);
                 break;
@@ -267,8 +281,13 @@
             foodCell.y = generator.Next(1, _gridSize - 2);
         }
 
-        
         _cells[foodCell.x, foodCell.y] = foodName;
+
+        if (foodName == GridColors.Kebab)
+        {
+            _kebabCell.x = foodCell.x;
+            _kebabCell.y = foodCell.y;
+        }
     }
 
     private void MakeSnakeLonger()
@@ -323,4 +342,40 @@
         }
         _cells[_snake.Tail.x, _snake.Tail.y] = GridColors.Blue;
     } 
+
+    private void DeleteKebabOrDecreaseKebabTimeLeft()
+    {
+        if (_cells.Cast<string>().Any(cellValue => cellValue == GridColors.Kebab))
+        {
+            if (_kebabTimeLeft > 0)
+            {
+                _kebabTimeLeft--;
+            }else
+            {
+                _cells[_kebabCell.x, _kebabCell.y] = GridColors.Green;
+            }
+        }
+    }
+
+    private void ChangeSnakeHeadPicture()
+    {
+        switch (_snakeHeadDirection)
+        {
+            case Directions.Up:
+                _cells[_snake.Head.x, _snake.Head.y] = GridColors.EyesUp;
+                break;
+
+            case Directions.Down:
+                _cells[_snake.Head.x, _snake.Head.y] = GridColors.EyesDown;
+                break;
+
+            case Directions.Left:
+                _cells[_snake.Head.x, _snake.Head.y] = GridColors.EyesLeft;
+                break;
+
+            case Directions.Right:
+                _cells[_snake.Head.x, _snake.Head.y] = GridColors.EyesRight;
+                break;
+        }
+    }
 }
