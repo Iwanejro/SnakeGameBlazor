@@ -6,26 +6,34 @@
 
 <PageTitle>Snake</PageTitle>
 <div class="containter" @onkeydown="ChangeDirection" tabindex="0">
-    <div class="container">
+    <div class="">
+        
         <div class="row align-items-center">
-            <div class="col-6 custom-no-spaces">
+            <div class="col-6">
+                <table style="border-collapse: collapse; border-spacing: 0;">
                 @for (int i = _gridSize; i > 0; i--)
                 {
-                    <div class="row">
+                    <tr>
                         @for (int j = 0; j < _gridSize; j++)
                         {
-                            <div class="col p-0 m-0">
-                                <img src=@("/images/"+ _cells[j,i-1] + ".png") class="img-fluid custom-no-spaces" />
-                            </div>
+                            <td style="padding:0">
+                                <img src=@("/images/"+ _cells[j,i-1] + ".png") class="img-fluid m-0 p-0 g-0" style="margin: 0 auto;display:block;"/>
+                            </td>
                         }
-                    </div>
+                    </tr>
                 }
+                </table>
             </div>
+            
             <div class="col-6 text-center">
-                <h1 class="fw-bold">Beer Snake</h1>
                 <br />
-                <h1 class="fw-">SCORE</h1>
-                <h1 class="">@_score</h1>
+                <h3>Level 1</h3>
+                <br /><br />
+                <h1 class="mb-0 fw-bold">SCORE</h1>
+                <h1 class="mt-0 fw-bold">@_score</h1>
+                <br /><br />
+                <h3>Next level for:</h3>
+                <h3>@(100 - _score)</h3>
             </div>
         </div>
     </div>
@@ -90,10 +98,7 @@
             {
                 _cells[_snake.Cells[i].x, _snake.Cells[i].y] = GridColors.Blue;
             }
-            //foreach (var cell in _snake.Cells)
-            //{
-            //    _cells[cell.x, cell.y] = GridColors.Blue;
-            //}
+            
             ChangeSnakeHeadPicture();
 
             _movesCount++;
