@@ -262,7 +262,7 @@
             case GridColors.Beer:
                 MakeSnakeLonger();
 
-                if (_score>=5)
+                if (_score>=1)
                 {
                     WinLevel();
                 }
@@ -407,6 +407,7 @@
         await MakeCellsGreen();
         StateHasChanged();
         await WriteCongrats();
+        await CountdownAnimation();
     }
 
     private async Task SnakeGoingIntoHoleAnimation()
@@ -452,17 +453,63 @@
 
         for (int i = -4, j=0; i < 4; i++, j++)
         {
-            _cells[middle.x + i, middle.y] = inscription[j].ToString() + ".png";
+            _cells[middle.x + i, middle.y+4] = inscription[j].ToString() + ".png";
             StateHasChanged();
-            await Task.Delay(100);
+            await Task.Delay(70);
         }
-        _cells[middle.x + 4, middle.y] = Letters.ExclamationMark;
+        _cells[middle.x + 4, middle.y+4] = Letters.ExclamationMark;
         StateHasChanged();
+        await Task.Delay(1000);
 
     }
 
     private async Task CountdownAnimation()
     {
-        
+        var middle = new Cell(){
+            x = Convert.ToInt32(Math.Round((double)(_gridSize / 2), mode: MidpointRounding.ToNegativeInfinity)),
+            y = Convert.ToInt32(Math.Round((double)(_gridSize / 2), mode: MidpointRounding.ToNegativeInfinity))
+        };
+
+        _cells[middle.x, middle.y] = GridColors.Yellow;
+        _cells[middle.x, middle.y+2] = GridColors.Yellow;
+        _cells[middle.x, middle.y-2] = GridColors.Yellow;
+        _cells[middle.x-1, middle.y+2] = GridColors.Yellow;
+        _cells[middle.x-1, middle.y-2] = GridColors.Yellow;
+        _cells[middle.x+1, middle.y] = GridColors.Yellow;
+        _cells[middle.x+1, middle.y+1] = GridColors.Yellow;
+        _cells[middle.x+1, middle.y+2] = GridColors.Yellow;
+        _cells[middle.x+1, middle.y-1] = GridColors.Yellow;
+        _cells[middle.x+1, middle.y-2] = GridColors.Yellow;
+
+        StateHasChanged();
+        await Task.Delay(1000);
+
+        _cells[middle.x, middle.y] = GridColors.Yellow;
+        _cells[middle.x, middle.y + 2] = GridColors.Yellow;
+        _cells[middle.x, middle.y - 2] = GridColors.Yellow;
+        _cells[middle.x - 1, middle.y + 2] = GridColors.Yellow;
+        _cells[middle.x - 1, middle.y - 2] = GridColors.Yellow;
+        _cells[middle.x + 1, middle.y] = GridColors.Yellow;
+        _cells[middle.x + 1, middle.y + 1] = GridColors.Yellow;
+        _cells[middle.x + 1, middle.y + 2] = GridColors.Yellow;
+        _cells[middle.x + 1, middle.y - 2] = GridColors.Yellow;
+        _cells[middle.x - 1, middle.y] = GridColors.Yellow;
+        _cells[middle.x - 1, middle.y-1] = GridColors.Yellow;
+        _cells[middle.x + 1, middle.y - 1] = GridColors.Green;
+
+        StateHasChanged();
+        await Task.Delay(1000);
+        _cells[middle.x-1, middle.y+2] = GridColors.Green;
+        _cells[middle.x, middle.y+2] = GridColors.Green;
+        _cells[middle.x-1, middle.y] = GridColors.Green;
+        _cells[middle.x, middle.y] = GridColors.Green;
+        _cells[middle.x-1, middle.y] = GridColors.Green;
+        _cells[middle.x-1, middle.y-1] = GridColors.Green;
+        _cells[middle.x-1, middle.y-2] = GridColors.Green;
+        _cells[middle.x, middle.y-2] = GridColors.Green;
+        _cells[middle.x+1, middle.y-1] = GridColors.Yellow;
+
+        StateHasChanged();
+        await Task.Delay(1000);
     }
 }
