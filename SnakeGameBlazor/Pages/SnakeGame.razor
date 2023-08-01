@@ -17,7 +17,7 @@
                         @for (int j = 0; j < _gridSize; j++)
                         {
                             <td style="padding:0">
-                                <img src=@("/images/"+ _cells[j,i-1] + ".png") class="img-fluid m-0 p-0 g-0" style="margin: 0 auto;display:block;"/>
+                                <img src=@("/images/"+ _cells[j,i-1]) class="img-fluid m-0 p-0 g-0" style="margin: 0 auto;display:block;"/>
                             </td>
                         }
                     </tr>
@@ -43,14 +43,15 @@
 @code {
     private string _direction;
     private string _snakeHeadDirection;
-    private const int _gridSize = 14; // size/2 == 0 !!!
-    private int _kebabFrequency = 5;
+    private const int _gridSize = 13; // size/2 == 0 !!!
+    private int _kebabFrequency = 10;
     private int _score;
     private int _movesCount;
     private int _kebabTimeLeft;
     private Cell _kebabCell = new Cell();
     private string[,] _cells = new string[_gridSize, _gridSize];
     private bool _isRunning;
+    private bool _turningEnabled = true;
     private Snake _snake = new Snake();
     private List<Cell> _edge = new List<Cell>();
 
@@ -69,16 +70,9 @@
         }
     }
 
-    protected override void OnInitialized()
+    protected async override void OnInitialized()
     {
-        for (int i = 1; i < _gridSize-1; i++)
-        {
-            for (int j = 1; j < _gridSize-1; j++)
-            {
-                _cells[i, j] = GridColors.Green;
-            }
-        }
-
+        await MakeCellsGreen();
         InitializeEdge();
         InitializeSnake();
         SpawnFood(GridColors.Beer);
@@ -98,7 +92,7 @@
             {
                 _cells[_snake.Cells[i].x, _snake.Cells[i].y] = GridColors.Blue;
             }
-            
+
             ChangeSnakeHeadPicture();
 
             _movesCount++;
@@ -108,39 +102,43 @@
 
     private async void ChangeDirection(KeyboardEventArgs e)
     {
-        switch (e.Key)
+        if (_turningEnabled)
         {
-            case Directions.ArrowUp:
-                if (_snakeHeadDirection != Directions.Down || !_isRunning)
-                {
-                    _direction = Directions.Up;
-                }
-                break;
+            switch (e.Key)
+            {
+                case Directions.ArrowUp:
+                    if (_snakeHeadDirection != Directions.Down || !_isRunning)
+                    {
+                        _direction = Directions.Up;
+                    }
+                    break;
 
-            case Directions.ArrowDown:
-                if (_snakeHeadDirection != Directions.Up || !_isRunning)
-                {
-                    _direction = Directions.Down;
-                }
-                break;
+                case Directions.ArrowDown:
+                    if (_snakeHeadDirection != Directions.Up || !_isRunning)
+                    {
+                        _direction = Directions.Down;
+                    }
+                    break;
 
-            case Directions.ArrowLeft:
-                if (_snakeHeadDirection != Directions.Right || !_isRunning)
-                {
-                    _direction = Directions.Left;
-                }
-                break;
+                case Directions.ArrowLeft:
+                    if (_snakeHeadDirection != Directions.Right || !_isRunning)
+                    {
+                        _direction = Directions.Left;
+                    }
+                    break;
 
-            case Directions.ArrowRight:
-                if (_snakeHeadDirection != Directions.Left || !_isRunning)
-                {
-                    _direction = Directions.Right;
-                }
-                break;
+                case Directions.ArrowRight:
+                    if (_snakeHeadDirection != Directions.Left || !_isRunning)
+                    {
+                        _direction = Directions.Right;
+                    }
+                    break;
+            }
+
+            if (!_isRunning)
+                await PlaySnake();
         }
 
-        if (!_isRunning)
-            await PlaySnake();
     }
 
     private void InitializeSnake()
@@ -150,25 +148,36 @@
             _snake.Cells.RemoveAll(c => c.x >= -1);
         }
         _snake.Length = 3;
-        _snake.Head.x = _gridSize / 2;
-        _snake.Head.y = _gridSize / 2;
+        _snake.Head.x = Convert.ToInt32(Math.Round((double)(_gridSize / 2), mode: MidpointRounding.ToEven));
+        _snake.Head.y = Convert.ToInt32(Math.Round((double)(_gridSize / 2), mode: MidpointRounding.ToEven));
 
         for (int i = 0; i < _snake.Length; i++)
         {
             _snake.Cells.Add(new Cell
             {
-                x = _gridSize / 2,
-                y = _gridSize / 2
+                x = _snake.Head.x,
+                y = _snake.Head.y
             });
 
             _cells[_gridSize / 2, _gridSize / 2] = GridColors.Blue;
         }
 
-        _snake.Tail.x = _gridSize / 2;
-        _snake.Tail.y = _gridSize / 2;
+        _snake.Tail.x = _snake.Head.x;
+        _snake.Tail.y = _snake.Head.y;
 
         _cells[_snake.Head.x, _snake.Head.y] = GridColors.EyesDown;
 
+    }
+
+    private async Task MakeCellsGreen()
+    {
+        for (int i = 1; i < _gridSize - 1; i++)
+        {
+            for (int j = 1; j < _gridSize - 1; j++)
+            {
+                _cells[i, j] = GridColors.Green;
+            }
+        }
     }
 
     private void InitializeEdge()
@@ -253,7 +262,11 @@
             case GridColors.Beer:
                 MakeSnakeLonger();
 
-                if (_score%_kebabFrequency == 0)
+                if (_score>=5)
+                {
+                    WinLevel();
+                }
+                else if (_score%_kebabFrequency == 0)
                 {
                     SpawnFood(GridColors.Kebab);
                     _kebabTimeLeft = 2*_gridSize;
@@ -310,10 +323,12 @@
     private async void GameOver()
     {
         _isRunning = false;
+        _turningEnabled = false;
         await FlashSnake();
         OnInitialized();
         StateHasChanged();
         _score = 0;
+        _turningEnabled = true;
     }
 
     private async Task FlashSnake()
@@ -322,11 +337,11 @@
         {
             MakeSnakeRed();
             StateHasChanged();
-            await Task.Delay(200);
+            await Task.Delay(150);
 
             MakeSnakeBlue();
             StateHasChanged();
-            await Task.Delay(200);
+            await Task.Delay(150);
         }
     }
 
@@ -382,5 +397,72 @@
                 _cells[_snake.Head.x, _snake.Head.y] = GridColors.EyesRight;
                 break;
         }
+    }
+
+    private async Task WinLevel()
+    {
+        _isRunning = false;
+        _turningEnabled = false;
+        await SnakeGoingIntoHoleAnimation();
+        await MakeCellsGreen();
+        StateHasChanged();
+        await WriteCongrats();
+    }
+
+    private async Task SnakeGoingIntoHoleAnimation()
+    {
+        _cells[_snake.Head.x, _snake.Head.y] = GridColors.Hole;
+        switch (_snakeHeadDirection)
+        {
+            case Directions.Up:
+                _cells[_snake.Cells[1].x, _snake.Cells[1].y] = GridColors.EyesUp;
+                break;
+
+            case Directions.Down:
+                _cells[_snake.Cells[1].x, _snake.Cells[1].y] = GridColors.EyesDown;
+                break;
+
+            case Directions.Left:
+                _cells[_snake.Cells[1].x, _snake.Cells[1].y] = GridColors.EyesLeft;
+                break;
+
+            case Directions.Right:
+                _cells[_snake.Cells[1].x, _snake.Cells[1].y] = GridColors.EyesRight;
+                break;
+        }
+        StateHasChanged();
+        await Task.Delay(2000);
+
+        _cells[_snake.Cells[1].x, _snake.Cells[1].y] = GridColors.Blue;
+        for (int i = _snake.Length-1; i >0 ; i--)
+        {
+            _cells[_snake.Cells[i].x, _snake.Cells[i].y] = GridColors.Green;
+            StateHasChanged();
+            await Task.Delay(100);
+        }
+    }
+
+    private async Task WriteCongrats()
+    {
+        var middle = new Cell(){
+            x = Convert.ToInt32(Math.Round((double)(_gridSize / 2), mode: MidpointRounding.ToNegativeInfinity)),
+            y = Convert.ToInt32(Math.Round((double)(_gridSize / 2), mode: MidpointRounding.ToNegativeInfinity))
+        };
+        string inscription = "CONGRATS";
+
+        for (int i = -4, j=0; i < 4; i++, j++)
+        {
+            _cells[middle.x + i, middle.y] = inscription[j].ToString() + ".png";
+            StateHasChanged();
+            await Task.Delay(100);
+        }
+        _cells[middle.x + 4, middle.y] = Letters.ExclamationMark;
+        StateHasChanged();
+
+    }
+
+    private async Task CountdownAnimation()
+    {
+        
     }
 }
