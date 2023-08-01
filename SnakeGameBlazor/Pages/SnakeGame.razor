@@ -72,10 +72,16 @@
 
     protected async override void OnInitialized()
     {
+        await PreparePlayingBoard();
+    }
+
+    private async Task PreparePlayingBoard()
+    {
         await MakeCellsGreen();
         InitializeEdge();
         InitializeSnake();
         SpawnFood(GridColors.Beer);
+        _turningEnabled = true;
     }
 
     async Task NextAction()
@@ -262,7 +268,7 @@
             case GridColors.Beer:
                 MakeSnakeLonger();
 
-                if (_score>=1)
+                if (_score>=5)
                 {
                     WinLevel();
                 }
@@ -325,7 +331,7 @@
         _isRunning = false;
         _turningEnabled = false;
         await FlashSnake();
-        OnInitialized();
+        PreparePlayingBoard();
         StateHasChanged();
         _score = 0;
         _turningEnabled = true;
@@ -415,6 +421,7 @@
 
         await Task.Delay(1000);
         await CountdownAnimation();
+        PreparePlayingBoard();
     }
 
     private async Task SnakeGoingIntoHoleAnimation()
