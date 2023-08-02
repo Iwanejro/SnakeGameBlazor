@@ -42,7 +42,6 @@
 
 @code {
     private string _direction;
-    private string _snakeHeadDirection;
     private int _gridSize = 13;
     private int _kebabFrequency = 10;
     private int _score;
@@ -80,16 +79,17 @@
         InitializeCells();
         await MakeCellsGreen();
         MakeEdgeBlack();
-        InitializeSnake();
+        _snake.InitializeSnake(_gridSize, _cells);
         SpawnFood(GridColors.Beer);
         _turningEnabled = true;
+        StateHasChanged();
     }
 
     async Task NextAction()
     {
-        MoveSnakeBody();
+        _snake.MoveSnakeBody();
 
-        MoveSnakeHead();
+        _snake.MoveSnakeHead(_direction);
 
         CheckSnakeHeadPosition();
 
@@ -98,10 +98,10 @@
 
             for (int i = 1; i < _snake.Length; i++)
             {
-                _cells.Find(c => c.x == _snake.Cells[i].x && c.y == _snake.Cells[i].y).Color = GridColors.Blue;
+                _cells.Find(c => c.x == _snake.SnakeCells[i].x && c.y == _snake.SnakeCells[i].y).Color = GridColors.Blue;
             }
 
-            ChangeSnakeHeadPicture();
+            _snake.ChangeSnakeHeadPicture(_cells);
 
             _movesCount++;
             DeleteKebabOrDecreaseKebabTimeLeft();
@@ -115,28 +115,28 @@
             switch (e.Key)
             {
                 case Directions.ArrowUp:
-                    if (_snakeHeadDirection != Directions.Down || !_isRunning)
+                    if (_snake.HeadDirection != Directions.Down || !_isRunning)
                     {
                         _direction = Directions.Up;
                     }
                     break;
 
                 case Directions.ArrowDown:
-                    if (_snakeHeadDirection != Directions.Up || !_isRunning)
+                    if (_snake.HeadDirection != Directions.Up || !_isRunning)
                     {
                         _direction = Directions.Down;
                     }
                     break;
 
                 case Directions.ArrowLeft:
-                    if (_snakeHeadDirection != Directions.Right || !_isRunning)
+                    if (_snake.HeadDirection != Directions.Right || !_isRunning)
                     {
                         _direction = Directions.Left;
                     }
                     break;
 
                 case Directions.ArrowRight:
-                    if (_snakeHeadDirection != Directions.Left || !_isRunning)
+                    if (_snake.HeadDirection != Directions.Left || !_isRunning)
                     {
                         _direction = Directions.Right;
                     }
@@ -147,31 +147,6 @@
                 await PlaySnake();
         }
 
-    }
-
-    private void InitializeSnake()
-    {
-        if (_snake.Cells.Count != 0)
-        {
-            _snake.Cells.RemoveAll(c => c.x >= -1);
-        }
-        _snake.Length = 3;
-        _snake.Head.x = Convert.ToInt32(Math.Round((double)(_gridSize / 2), mode: MidpointRounding.ToEven));
-        _snake.Head.y = Convert.ToInt32(Math.Round((double)(_gridSize / 2), mode: MidpointRounding.ToEven));
-
-        _snake.Tail.x = _snake.Head.x;
-        _snake.Tail.y = _snake.Head.y;
-
-        for (int i = 0; i < _snake.Length; i++)
-        {
-            _snake.Cells.Add(new Cell
-            {
-                x = _snake.Head.x,
-                y = _snake.Head.y
-            });
-
-        }
-        _cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color = GridColors.EyesDown;
     }
 
     private async Task MakeCellsGreen()
@@ -213,47 +188,6 @@
         }
     }
 
-    private void MoveSnakeBody()
-    {
-        _snake.Tail.x = _snake.Cells[_snake.Length - 1].x;
-        _snake.Tail.y = _snake.Cells[_snake.Length - 1].y;
-
-        for (int i = _snake.Length - 1; i > 0; i--)
-        {
-            _snake.Cells[i].x = _snake.Cells[i - 1].x;
-            _snake.Cells[i].y = _snake.Cells[i - 1].y;
-        }
-    }
-
-    private void MoveSnakeHead()
-    {
-        switch (_direction)
-        {
-            case Directions.Up:
-                _snake.Cells[0].y = _snake.Cells[0].y + 1;
-                _snakeHeadDirection = Directions.Up;
-                break;
-
-            case Directions.Down:
-                _snake.Cells[0].y = _snake.Cells[0].y - 1;
-                _snakeHeadDirection = Directions.Down;
-                break;
-
-            case Directions.Left:
-                _snake.Cells[0].x = _snake.Cells[0].x - 1;
-                _snakeHeadDirection = Directions.Left;
-                break;
-
-            case Directions.Right:
-                _snake.Cells[0].x = _snake.Cells[0].x + 1;
-                _snakeHeadDirection = Directions.Right;
-                break;
-        }
-        _snake.Head.x = _snake.Cells[0].x;
-        _snake.Head.y = _snake.Cells[0].y;
-
-    }
-
     private async void CheckSnakeHeadPosition()
     {
         switch (_cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color)
@@ -268,7 +202,8 @@
                 break;
 
             case GridColors.Beer:
-                MakeSnakeLonger();
+                _snake.MakeSnakeLonger();
+                _score++;
 
                 if (_score>=5)
                 {
@@ -301,7 +236,7 @@
                 x = generator.Next(1, _gridSize-2),
                 y = generator.Next(1, _gridSize-2)
             };
-        while (_snake.Cells.Any(snakeCell => snakeCell.x == foodCell.x && snakeCell.y == foodCell.y) || _cells.Find(c => c.x == foodCell.x && c.y == foodCell.y).Color == GridColors.Beer)
+        while (_snake.SnakeCells.Any(snakeCell => snakeCell.x == foodCell.x && snakeCell.y == foodCell.y) || _cells.Find(c => c.x == foodCell.x && c.y == foodCell.y).Color == GridColors.Beer)
         {
             foodCell.x = generator.Next(1, _gridSize - 2);
             foodCell.y = generator.Next(1, _gridSize - 2);
@@ -315,18 +250,6 @@
             _kebabCell.y = foodCell.y;
         }
     }
-
-    private void MakeSnakeLonger()
-    {
-        _snake.Cells.Add(new Cell
-            {
-                x = _snake.Tail.x,
-                y = _snake.Tail.y
-            });
-        _snake.Length++;
-        _score++;
-    }
-
 
     private async void GameOver()
     {
@@ -343,23 +266,14 @@
     {
         for (int i = 0; i < 4; i++)
         {
-            ChangeSnakeColor(GridColors.Red);
+            _snake.ChangeSnakeColor(GridColors.Red, _cells);
             StateHasChanged();
             await Task.Delay(150);
 
-            ChangeSnakeColor(GridColors.Blue);
+            _snake.ChangeSnakeColor(GridColors.Blue, _cells);
             StateHasChanged();
             await Task.Delay(150);
         }
-    }
-
-    private void ChangeSnakeColor(string color)
-    {
-        foreach (var cell in _snake.Cells)
-        {
-            _cells.Find(c => c.x == cell.x && c.y == cell.y).Color =color;
-        }
-        _cells.Find(c => c.x == _snake.Tail.x && c.y == _snake.Tail.y).Color = color;
     }
 
     private void DeleteKebabOrDecreaseKebabTimeLeft()
@@ -373,29 +287,6 @@
             {
                 _cells.Find(c => c.x == _kebabCell.x && c.y == _kebabCell.y).Color = GridColors.Green;
             }
-        }
-    }
-
-    private void ChangeSnakeHeadPicture()
-    {
-        switch (_snakeHeadDirection)
-        {
-            case Directions.Up:
-                _cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color = GridColors.EyesUp;
-                break;
-
-            case Directions.Down:
-                _cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color = GridColors.EyesDown;
-
-                break;
-
-            case Directions.Left:
-                _cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color = GridColors.EyesLeft;
-                break;
-
-            case Directions.Right:
-                _cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color = GridColors.EyesRight;
-                break;
         }
     }
 
@@ -421,31 +312,31 @@
     private async Task SnakeGoingIntoHoleAnimation()
     {
         _cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color = GridColors.Hole;
-        switch (_snakeHeadDirection)
+        switch (_snake.HeadDirection)
         {
             case Directions.Up:
-                _cells.Find(c => c.x == _snake.Cells[1].x && c.y == _snake.Cells[1].y).Color = GridColors.EyesUp;
+                _cells.Find(c => c.x == _snake.SnakeCells[1].x && c.y == _snake.SnakeCells[1].y).Color = GridColors.EyesUp;
                 break;
 
             case Directions.Down:
-                _cells.Find(c => c.x == _snake.Cells[1].x && c.y == _snake.Cells[1].y).Color = GridColors.EyesDown;
+                _cells.Find(c => c.x == _snake.SnakeCells[1].x && c.y == _snake.SnakeCells[1].y).Color = GridColors.EyesDown;
                 break;
 
             case Directions.Left:
-                _cells.Find(c => c.x == _snake.Cells[1].x && c.y == _snake.Cells[1].y).Color = GridColors.EyesLeft;
+                _cells.Find(c => c.x == _snake.SnakeCells[1].x && c.y == _snake.SnakeCells[1].y).Color = GridColors.EyesLeft;
                 break;
 
             case Directions.Right:
-                _cells.Find(c => c.x == _snake.Cells[1].x && c.y == _snake.Cells[1].y).Color = GridColors.EyesRight;
+                _cells.Find(c => c.x == _snake.SnakeCells[1].x && c.y == _snake.SnakeCells[1].y).Color = GridColors.EyesRight;
                 break;
         }
         StateHasChanged();
         await Task.Delay(2000);
 
-        _cells.Find(c => c.x == _snake.Cells[1].x && c.y == _snake.Cells[1].y).Color = GridColors.Blue;
+        _cells.Find(c => c.x == _snake.SnakeCells[1].x && c.y == _snake.SnakeCells[1].y).Color = GridColors.Blue;
         for (int i = _snake.Length-1; i >0 ; i--)
         {
-            _cells.Find(c => c.x == _snake.Cells[i].x && c.y == _snake.Cells[i].y).Color = GridColors.Green;
+            _cells.Find(c => c.x == _snake.SnakeCells[i].x && c.y == _snake.SnakeCells[i].y).Color = GridColors.Green;
             StateHasChanged();
             await Task.Delay(100);
         }
