@@ -17,7 +17,7 @@
                         @for (int j = 0; j < _gridSize; j++)
                         {
                             <td style="padding:0">
-                                <img src=@("/images/"+ _cells[j,i-1]) class="img-fluid m-0 p-0 g-0" style="margin: 0 auto;display:block;"/>
+                                <img src=@("/images/"+ _cells.Find(c => c.x == j && c.y == i-1).Color) class="img-fluid m-0 p-0 g-0" style="margin: 0 auto;display:block;"/>
                             </td>
                         }
                     </tr>
@@ -43,13 +43,13 @@
 @code {
     private string _direction;
     private string _snakeHeadDirection;
-    private const int _gridSize = 13; // size/2 == 0 !!!
+    private int _gridSize = 13;
     private int _kebabFrequency = 10;
     private int _score;
     private int _movesCount;
     private int _kebabTimeLeft;
     private Cell _kebabCell = new Cell();
-    private string[,] _cells = new string[_gridSize, _gridSize];
+    private List<Cell> _cells = new List<Cell>();
     private bool _isRunning;
     private bool _turningEnabled = true;
     private Snake _snake = new Snake();
@@ -77,8 +77,9 @@
 
     private async Task PreparePlayingBoard()
     {
+        InitializeCells();
         await MakeCellsGreen();
-        InitializeEdge();
+        MakeEdgeBlack();
         InitializeSnake();
         SpawnFood(GridColors.Beer);
         _turningEnabled = true;
@@ -94,9 +95,10 @@
 
         if (_isRunning)
         {
+
             for (int i = 1; i < _snake.Length; i++)
             {
-                _cells[_snake.Cells[i].x, _snake.Cells[i].y] = GridColors.Blue;
+                _cells.Find(c => c.x == _snake.Cells[i].x && c.y == _snake.Cells[i].y).Color = GridColors.Blue;
             }
 
             ChangeSnakeHeadPicture();
@@ -157,6 +159,9 @@
         _snake.Head.x = Convert.ToInt32(Math.Round((double)(_gridSize / 2), mode: MidpointRounding.ToEven));
         _snake.Head.y = Convert.ToInt32(Math.Round((double)(_gridSize / 2), mode: MidpointRounding.ToEven));
 
+        _snake.Tail.x = _snake.Head.x;
+        _snake.Tail.y = _snake.Head.y;
+
         for (int i = 0; i < _snake.Length; i++)
         {
             _snake.Cells.Add(new Cell
@@ -165,49 +170,46 @@
                 y = _snake.Head.y
             });
 
-            _cells[_gridSize / 2, _gridSize / 2] = GridColors.Blue;
         }
-
-        _snake.Tail.x = _snake.Head.x;
-        _snake.Tail.y = _snake.Head.y;
-
-        _cells[_snake.Head.x, _snake.Head.y] = GridColors.EyesDown;
-
+        _cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color = GridColors.EyesDown;
     }
 
     private async Task MakeCellsGreen()
     {
-        for (int i = 1; i < _gridSize - 1; i++)
+        var cells = _cells.Where(c => c.x >= 1 && c.y >= 1 && c.x <= _gridSize - 2 && c.y <= _gridSize - 2);
+        foreach (var cell in cells)
         {
-            for (int j = 1; j < _gridSize - 1; j++)
-            {
-                _cells[i, j] = GridColors.Green;
-            }
+            cell.Color = GridColors.Green;
         }
+
     }
 
-    private void InitializeEdge()
+    private void InitializeCells()
     {
-        if (_edge.Count > 0)
+        if (_cells.Count > 0)
         {
-            _edge.RemoveAll(c => c.x >= -1);
+            _cells.RemoveAll(c => c.x >= -1);
         }
 
         for (int i = 0; i < _gridSize; i++)
         {
-            var cells = new List<Cell>
+            for (int j = 0; j < _gridSize; j++)
             {
-                new Cell {x = i, y = 0},
-                new Cell {x = 0, y = i},
-                new Cell {x = _gridSize-1, y = i},
-                new Cell {x = i, y = _gridSize-1}
-            };
-            _edge.AddRange(cells);
+                _cells.Add(new Cell
+                    {
+                        x = i,
+                        y = j,
+            });
+            }
         }
+    }
 
-        foreach (var edgeCell in _edge)
+    private void MakeEdgeBlack()
+    {
+        var cells = _cells.Where(c => c.x == 0 || c.y == 0 || c.x == _gridSize-1 || c.y == _gridSize-1);
+        foreach (var cell in cells)
         {
-            _cells[edgeCell.x, edgeCell.y] = GridColors.Black;
+            cell.Color = GridColors.Black;
         }
     }
 
@@ -254,7 +256,7 @@
 
     private async void CheckSnakeHeadPosition()
     {
-        switch (_cells[_snake.Head.x, _snake.Head.y])
+        switch (_cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color)
         {
             case GridColors.Blue:
             case GridColors.Black:
@@ -282,11 +284,11 @@
 
             case GridColors.Kebab:
                 _score += 10;
-                _cells[_snake.Tail.x, _snake.Tail.y] = GridColors.Green;
+                _cells.Find(c => c.x == _snake.Tail.x && c.y == _snake.Tail.y).Color = GridColors.Green;
                 break;
 
             case GridColors.Green:
-                _cells[_snake.Tail.x, _snake.Tail.y] = GridColors.Green;
+                _cells.Find(c => c.x == _snake.Tail.x && c.y == _snake.Tail.y).Color = GridColors.Green;
                 break;
         }
     }
@@ -299,13 +301,13 @@
                 x = generator.Next(1, _gridSize-2),
                 y = generator.Next(1, _gridSize-2)
             };
-        while (_snake.Cells.Any(snakeCell => snakeCell.x == foodCell.x && snakeCell.y == foodCell.y) || _cells[foodCell.x, foodCell.y] == GridColors.Beer)
+        while (_snake.Cells.Any(snakeCell => snakeCell.x == foodCell.x && snakeCell.y == foodCell.y) || _cells.Find(c => c.x == foodCell.x && c.y == foodCell.y).Color == GridColors.Beer)
         {
             foodCell.x = generator.Next(1, _gridSize - 2);
             foodCell.y = generator.Next(1, _gridSize - 2);
         }
 
-        _cells[foodCell.x, foodCell.y] = foodName;
+        _cells.Find(c => c.x == foodCell.x && c.y == foodCell.y).Color = foodName;
 
         if (foodName == GridColors.Kebab)
         {
@@ -341,44 +343,35 @@
     {
         for (int i = 0; i < 4; i++)
         {
-            MakeSnakeRed();
+            ChangeSnakeColor(GridColors.Red);
             StateHasChanged();
             await Task.Delay(150);
 
-            MakeSnakeBlue();
+            ChangeSnakeColor(GridColors.Blue);
             StateHasChanged();
             await Task.Delay(150);
         }
     }
 
-    private void MakeSnakeRed()
+    private void ChangeSnakeColor(string color)
     {
         foreach (var cell in _snake.Cells)
         {
-            _cells[cell.x, cell.y] = GridColors.Red;
+            _cells.Find(c => c.x == cell.x && c.y == cell.y).Color =color;
         }
-        _cells[_snake.Tail.x, _snake.Tail.y] = GridColors.Red;
+        _cells.Find(c => c.x == _snake.Tail.x && c.y == _snake.Tail.y).Color = color;
     }
-
-    private void MakeSnakeBlue()
-    {
-        foreach (var cell in _snake.Cells)
-        {
-            _cells[cell.x, cell.y] = GridColors.Blue;
-        }
-        _cells[_snake.Tail.x, _snake.Tail.y] = GridColors.Blue;
-    } 
 
     private void DeleteKebabOrDecreaseKebabTimeLeft()
     {
-        if (_cells.Cast<string>().Any(cellValue => cellValue == GridColors.Kebab))
+        if (_cells.Any(c => c.Color == GridColors.Kebab))
         {
             if (_kebabTimeLeft > 0)
             {
                 _kebabTimeLeft--;
             }else
             {
-                _cells[_kebabCell.x, _kebabCell.y] = GridColors.Green;
+                _cells.Find(c => c.x == _kebabCell.x && c.y == _kebabCell.y).Color = GridColors.Green;
             }
         }
     }
@@ -388,19 +381,20 @@
         switch (_snakeHeadDirection)
         {
             case Directions.Up:
-                _cells[_snake.Head.x, _snake.Head.y] = GridColors.EyesUp;
+                _cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color = GridColors.EyesUp;
                 break;
 
             case Directions.Down:
-                _cells[_snake.Head.x, _snake.Head.y] = GridColors.EyesDown;
+                _cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color = GridColors.EyesDown;
+
                 break;
 
             case Directions.Left:
-                _cells[_snake.Head.x, _snake.Head.y] = GridColors.EyesLeft;
+                _cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color = GridColors.EyesLeft;
                 break;
 
             case Directions.Right:
-                _cells[_snake.Head.x, _snake.Head.y] = GridColors.EyesRight;
+                _cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color = GridColors.EyesRight;
                 break;
         }
     }
@@ -426,32 +420,32 @@
 
     private async Task SnakeGoingIntoHoleAnimation()
     {
-        _cells[_snake.Head.x, _snake.Head.y] = GridColors.Hole;
+        _cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color = GridColors.Hole;
         switch (_snakeHeadDirection)
         {
             case Directions.Up:
-                _cells[_snake.Cells[1].x, _snake.Cells[1].y] = GridColors.EyesUp;
+                _cells.Find(c => c.x == _snake.Cells[1].x && c.y == _snake.Cells[1].y).Color = GridColors.EyesUp;
                 break;
 
             case Directions.Down:
-                _cells[_snake.Cells[1].x, _snake.Cells[1].y] = GridColors.EyesDown;
+                _cells.Find(c => c.x == _snake.Cells[1].x && c.y == _snake.Cells[1].y).Color = GridColors.EyesDown;
                 break;
 
             case Directions.Left:
-                _cells[_snake.Cells[1].x, _snake.Cells[1].y] = GridColors.EyesLeft;
+                _cells.Find(c => c.x == _snake.Cells[1].x && c.y == _snake.Cells[1].y).Color = GridColors.EyesLeft;
                 break;
 
             case Directions.Right:
-                _cells[_snake.Cells[1].x, _snake.Cells[1].y] = GridColors.EyesRight;
+                _cells.Find(c => c.x == _snake.Cells[1].x && c.y == _snake.Cells[1].y).Color = GridColors.EyesRight;
                 break;
         }
         StateHasChanged();
         await Task.Delay(2000);
 
-        _cells[_snake.Cells[1].x, _snake.Cells[1].y] = GridColors.Blue;
+        _cells.Find(c => c.x == _snake.Cells[1].x && c.y == _snake.Cells[1].y).Color = GridColors.Blue;
         for (int i = _snake.Length-1; i >0 ; i--)
         {
-            _cells[_snake.Cells[i].x, _snake.Cells[i].y] = GridColors.Green;
+            _cells.Find(c => c.x == _snake.Cells[i].x && c.y == _snake.Cells[i].y).Color = GridColors.Green;
             StateHasChanged();
             await Task.Delay(100);
         }
@@ -467,11 +461,11 @@
 
         for (int i = -4, j=0; i < 4; i++, j++)
         {
-            _cells[middle.x + i, middle.y+4] = inscription[j].ToString() + ".png";
+            _cells.Find(c => c.x == middle.x + i && c.y == middle.y+4).Color = inscription[j].ToString() + ".png";
             StateHasChanged();
             await Task.Delay(80);
         }
-        _cells[middle.x + 4, middle.y+4] = Letters.ExclamationMark;
+        _cells.Find(c => c.x == middle.x + 4 && c.y == middle.y + 4).Color = Letters.ExclamationMark;
         StateHasChanged();
         await Task.Delay(150);
 
@@ -488,58 +482,85 @@
 
         for (int i = -5, j = 0; i < 0; i++, j++)
         {
-            _cells[middle.x + i, middle.y + 2] = inscription[j].ToString() + ".png";
+            _cells.Find(c => c.x == middle.x + i && c.y == middle.y + 2).Color = inscription[j].ToString() + ".png";
         }
-        _cells[middle.x + 1, middle.y + 2] = "2.png";
+        _cells.Find(c => c.x == middle.x + 1 && c.y == middle.y + 2).Color = "2.png";
 
         inscription = "FOR";
 
         for (int i = 3, j = 0; i < 6; i++, j++)
         {
-            _cells[middle.x + i, middle.y + 2] = inscription[j].ToString() + ".png";
+            _cells.Find(c => c.x == middle.x + i && c.y == middle.y + 2).Color = inscription[j].ToString() + ".png";
         }
 
         StateHasChanged();
         await Task.Delay(2000);
 
-        _cells[middle.x, middle.y-2] = GridColors.Yellow;
-        _cells[middle.x, middle.y] = GridColors.Yellow;
-        _cells[middle.x, middle.y-4] = GridColors.Yellow;
-        _cells[middle.x-1, middle.y] = GridColors.Yellow;
-        _cells[middle.x-1, middle.y-4] = GridColors.Yellow;
-        _cells[middle.x+1, middle.y-2] = GridColors.Yellow;
-        _cells[middle.x+1, middle.y-1] = GridColors.Yellow;
-        _cells[middle.x+1, middle.y] = GridColors.Yellow;
-        _cells[middle.x+1, middle.y-3] = GridColors.Yellow;
-        _cells[middle.x+1, middle.y-4] = GridColors.Yellow;
+        var cellsToChange = new List<Cell>()
+        {
+            new Cell {x = middle.x, y = middle.y-2, Color = GridColors.Yellow},
+            new Cell {x = middle.x, y = middle.y, Color = GridColors.Yellow},
+            new Cell {x = middle.x, y = middle.y-4, Color = GridColors.Yellow},
+            new Cell {x = middle.x-1, y = middle.y, Color = GridColors.Yellow},
+            new Cell {x = middle.x-1, y = middle.y-4, Color = GridColors.Yellow},
+            new Cell {x = middle.x+1, y = middle.y-2, Color = GridColors.Yellow},
+            new Cell {x = middle.x+1, y = middle.y-1, Color = GridColors.Yellow},
+            new Cell {x = middle.x+1, y = middle.y , Color = GridColors.Yellow},
+            new Cell {x = middle.x+1, y = middle.y-3, Color = GridColors.Yellow},
+            new Cell {x = middle.x+1, y = middle.y-4, Color = GridColors.Yellow}
+        };
+
+        foreach (var cell in cellsToChange)
+        {
+            _cells.Find(c => c.x == cell.x && c.y == cell.y).Color = cell.Color;
+        }
 
         StateHasChanged();
         await Task.Delay(1000);
+        cellsToChange.RemoveAll(c => c.x >= -1);
 
-        _cells[middle.x, middle.y-2] = GridColors.Yellow;
-        _cells[middle.x, middle.y] = GridColors.Yellow;
-        _cells[middle.x, middle.y - 4] = GridColors.Yellow;
-        _cells[middle.x - 1, middle.y] = GridColors.Yellow;
-        _cells[middle.x - 1, middle.y - 4] = GridColors.Yellow;
-        _cells[middle.x + 1, middle.y-2] = GridColors.Yellow;
-        _cells[middle.x + 1, middle.y -1] = GridColors.Yellow;
-        _cells[middle.x + 1, middle.y] = GridColors.Yellow;
-        _cells[middle.x + 1, middle.y - 4] = GridColors.Yellow;
-        _cells[middle.x - 1, middle.y-2] = GridColors.Yellow;
-        _cells[middle.x - 1, middle.y-3] = GridColors.Yellow;
-        _cells[middle.x + 1, middle.y - 3] = GridColors.Green;
+        cellsToChange.AddRange(new List<Cell>()
+        {
+            new Cell {x = middle.x, y = middle.y-2, Color = GridColors.Yellow},
+            new Cell {x = middle.x, y = middle.y, Color = GridColors.Yellow},
+            new Cell {x = middle.x, y = middle.y-4, Color = GridColors.Yellow},
+            new Cell {x = middle.x-1, y = middle.y, Color = GridColors.Yellow},
+            new Cell {x = middle.x-1, y = middle.y-4, Color = GridColors.Yellow},
+            new Cell {x = middle.x+1, y = middle.y-2, Color = GridColors.Yellow},
+            new Cell {x = middle.x+1, y = middle.y-1, Color = GridColors.Yellow},
+            new Cell {x = middle.x+1, y = middle.y, Color = GridColors.Yellow},
+            new Cell {x = middle.x+1, y = middle.y-4, Color = GridColors.Yellow},
+            new Cell {x = middle.x-1, y = middle.y-2, Color = GridColors.Yellow},
+            new Cell {x = middle.x-1, y = middle.y-3, Color = GridColors.Yellow},
+            new Cell {x = middle.x+1, y = middle.y-3, Color = GridColors.Green},
+        });
 
+        foreach (var cell in cellsToChange)
+        {
+            _cells.Find(c => c.x == cell.x && c.y == cell.y).Color = cell.Color;
+        }
         StateHasChanged();
         await Task.Delay(1000);
-        _cells[middle.x-1, middle.y] = GridColors.Green;
-        _cells[middle.x, middle.y] = GridColors.Green;
-        _cells[middle.x-1, middle.y-2] = GridColors.Green;
-        _cells[middle.x, middle.y-2] = GridColors.Green;
-        _cells[middle.x-1, middle.y-2] = GridColors.Green;
-        _cells[middle.x-1, middle.y-3] = GridColors.Green;
-        _cells[middle.x-1, middle.y-4] = GridColors.Green;
-        _cells[middle.x, middle.y-4] = GridColors.Green;
-        _cells[middle.x+1, middle.y-3] = GridColors.Yellow;
+        cellsToChange.RemoveAll(c => c.x >= -1);
+
+        cellsToChange.AddRange(new List<Cell>()
+        {
+            new Cell {x = middle.x-1, y = middle.y, Color = GridColors.Green},
+            new Cell {x = middle.x, y = middle.y, Color = GridColors.Green},
+            new Cell {x = middle.x-1, y = middle.y-2, Color = GridColors.Green},
+            new Cell {x = middle.x, y = middle.y-2, Color = GridColors.Green},
+            new Cell {x = middle.x-1, y = middle.y-2, Color = GridColors.Green},
+            new Cell {x = middle.x-1, y = middle.y-3, Color = GridColors.Green},
+            new Cell {x = middle.x-1, y = middle.y-4, Color = GridColors.Green},
+            new Cell {x = middle.x, y = middle.y-4, Color = GridColors.Green},
+            new Cell {x = middle.x+1, y = middle.y-3, Color = GridColors.Yellow},
+            
+        });
+
+        foreach (var cell in cellsToChange)
+        {
+            _cells.Find(c => c.x == cell.x && c.y == cell.y).Color = cell.Color;
+        }
 
         StateHasChanged();
         await Task.Delay(1000);
