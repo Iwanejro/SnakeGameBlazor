@@ -31,6 +31,7 @@
                 <br /><br />
                 <h1 class="mb-0 fw-bold">SCORE</h1>
                 <h1 class="mt-0 fw-bold">@_score</h1>
+                <h3 class="mt-0">Speed: @(Math.Abs(_snake.Speed - 250))</h3>
                 <br /><br />
                 <h3>Next level for:</h3>
                 <h3>@(_winningScore - _score)</h3>
@@ -47,7 +48,7 @@
     private Cell _kebabCell = new Cell();
 
     private int _gridSize = 13;
-    private int _kebabFrequency = 2;
+    private int _kebabFrequency = 10;
 
     private bool _isRunning;
     private string _direction;
@@ -65,7 +66,7 @@
 
         while (_isRunning)
         {
-            await Task.Delay(200);
+            await Task.Delay(_snake.Speed);
 
             await NextAction();
 
@@ -208,6 +209,7 @@
             case GridColors.Beer:
                 _snake.MakeSnakeLonger();
                 _score++;
+                _snake.Speed -= 2;
 
                 if (_score>=_winningScore)
                 {
@@ -261,6 +263,7 @@
         _turningEnabled = false;
         await FlashSnake();
         _snake.Length = 3;
+        _snake.Speed = 250;
         _level = 1;
         _winningScore = 30;
         _gridSize = 13;

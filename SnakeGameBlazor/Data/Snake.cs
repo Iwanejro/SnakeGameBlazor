@@ -9,6 +9,7 @@ namespace SnakeGameBlazor.Data
         public Cell Head { get; set; }
         public Cell Tail { get; set; }
         public int Length { get; set; }
+        public int Speed { get; set; }
         public string HeadDirection { get; set; }
 
         public Snake()
@@ -17,6 +18,7 @@ namespace SnakeGameBlazor.Data
             Head = new Cell();
             Tail = new Cell();
             Length = 3;
+            Speed = 250;
         }
 
         public void InitializeSnake(int gridSize, List<Cell> cells)
