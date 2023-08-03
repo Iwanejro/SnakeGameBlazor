@@ -21,7 +21,7 @@ namespace SnakeGameBlazor.Data
 
         public void InitializeSnake(int gridSize, List<Cell> cells)
         {
-            if (SnakeCells.Count != 0)
+            if (SnakeCells.Count > 0)
             {
                 SnakeCells.RemoveAll(c => c.x >= -1);
             }

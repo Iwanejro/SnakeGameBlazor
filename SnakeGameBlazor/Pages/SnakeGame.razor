@@ -27,13 +27,13 @@
             
             <div class="col-6 text-center">
                 <br />
-                <h3>Level 1</h3>
+                <h3>Level @_level</h3>
                 <br /><br />
                 <h1 class="mb-0 fw-bold">SCORE</h1>
                 <h1 class="mt-0 fw-bold">@_score</h1>
                 <br /><br />
                 <h3>Next level for:</h3>
-                <h3>@(100 - _score)</h3>
+                <h3>@(_winningScore - _score)</h3>
             </div>
         </div>
     </div>
@@ -41,18 +41,22 @@
 </div>
 
 @code {
-    private string _direction;
-    private int _gridSize = 13;
-    private int _kebabFrequency = 10;
-    private int _score;
-    private int _movesCount;
-    private int _kebabTimeLeft;
-    private Cell _kebabCell = new Cell();
     private List<Cell> _cells = new List<Cell>();
-    private bool _isRunning;
-    private bool _turningEnabled = true;
     private Snake _snake = new Snake();
     private List<Cell> _edge = new List<Cell>();
+    private Cell _kebabCell = new Cell();
+
+    private int _gridSize = 13;
+    private int _kebabFrequency = 2;
+
+    private bool _isRunning;
+    private string _direction;
+    private int _level = 1;
+    private int _score;
+    private int _winningScore = 30;
+    private int _movesCount;
+    private int _kebabTimeLeft;
+    private bool _turningEnabled = true;
 
 
     async Task PlaySnake()
@@ -205,7 +209,7 @@
                 _snake.MakeSnakeLonger();
                 _score++;
 
-                if (_score>=5)
+                if (_score>=_winningScore)
                 {
                     WinLevel();
                 }
@@ -256,9 +260,13 @@
         _isRunning = false;
         _turningEnabled = false;
         await FlashSnake();
+        _snake.Length = 3;
+        _level = 1;
+        _winningScore = 30;
+        _gridSize = 13;
+        _score = 0;
         PreparePlayingBoard();
         StateHasChanged();
-        _score = 0;
         _turningEnabled = true;
     }
 
@@ -306,6 +314,10 @@
 
         await Task.Delay(1000);
         await CountdownAnimation();
+        _level++;
+        _score = _winningScore;
+        _winningScore = 3 * _winningScore;
+        _gridSize = Convert.ToInt32(Math.Round(1.5 * _gridSize, 0,mode: MidpointRounding.ToPositiveInfinity));
         PreparePlayingBoard();
     }
 
