@@ -6,56 +6,53 @@
 @using System.Linq;
 
 <PageTitle>Snake</PageTitle>
-<div class="containter" @onkeydown="ChangeDirection" tabindex="0">
-    <div class="">
-        
-        <div class="row align-items-center">
-            <div class="col-6">
-                <table style="border-collapse: collapse; border-spacing: 0;">
-                @for (int i = _gridSize; i > 0; i--)
-                {
-                    <tr>
-                        @for (int j = 0; j < _gridSize; j++)
-                        {
-                            <td style="padding:0">
-                                <img src=@("/images/"+ _cells.Find(c => c.x == j && c.y == i-1).Color) class="img-fluid m-0 p-0 g-0" style="margin: 0 auto;display:block;"/>
-                            </td>
-                        }
-                    </tr>
-                }
-                </table>
-            </div>
-            
-            <div class="col-6 text-center">
-                <br />
-                <h3>Level @_level</h3>
-                <br /><br />
-                <h1 class="mb-0 fw-bold">SCORE</h1>
-                <h1 class="mt-0 fw-bold">@_score</h1>
-                <h3 class="mt-0">Speed: @(Math.Abs(_snake.Speed - 250))</h3>
-                <br /><br />
-                <h3>Next level for:</h3>
-                <h3>@(_winningScore - _score)</h3>
-            </div>
+@{
+    int BoardSize = 800;
+}
+<div class="container fluid">
+    <div class="row align-items-center" @onkeydown="ChangeDirection" tabindex="0">
+        <div class="container col-8">
+            @for (int i = _gridSize; i > 0; i--)
+            {
+                <div class="row m-0" style="max-height:@(BoardSize/_gridSize + "px")">
+                    @for (int j = 0; j < _gridSize; j++)
+                    {
+                        <div class="col p-0" style="max-width:@(BoardSize/_gridSize + "px")">
+                            <img src=@("/images/"+ _cells.Find(c => c.x == j && c.y == i-1).Color) class="img-fluid"/>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        <div class="col-4 text-center">
+            <br />
+            <h3>Level @_level</h3>
+            <br /><br />
+            <h1 class="mb-0 fw-bold">SCORE</h1>
+            <h1 class="mt-0 fw-bold">@_score</h1>
+            <h3 class="mt-0">Speed: @(Math.Abs(_snake.Speed - Snake.InitialSpeed))</h3>
+            <br /><br />
+            <h3>Next level for:</h3>
+            <h3>@(_winningScore - _score)</h3>
         </div>
     </div>
-    <br /><br />
 </div>
-
 @code {
     private List<Cell> _cells = new List<Cell>();
     private Snake _snake = new Snake();
     private List<Cell> _edge = new List<Cell>();
     private Cell _kebabCell = new Cell();
+    private const int _initialGridSize = 13;
+    private const int _initialWinningScore = 40;
+    private int _kebabFrequency = 2;
+    private int _gridSize = _initialGridSize;
+    private int _winningScore = _initialWinningScore;
+    private int _score;
 
-    private int _gridSize = 13;
-    private int _kebabFrequency = 10;
+    private int _level = 1;
 
     private bool _isRunning;
     private string _direction;
-    private int _level = 1;
-    private int _score;
-    private int _winningScore = 30;
     private int _movesCount;
     private int _kebabTimeLeft;
     private bool _turningEnabled = true;
@@ -263,12 +260,13 @@
         _isRunning = false;
         _turningEnabled = false;
         await FlashSnake();
-        _snake.Length = 3;
-        _snake.Speed = 250;
+        _snake.Length = Snake.InitialLenght;
+        _snake.Speed = Snake.InitialSpeed;
+        _winningScore = _initialWinningScore;
+        _gridSize = _initialGridSize;
         _level = 1;
-        _winningScore = 30;
-        _gridSize = 13;
         _score = 0;
+        _movesCount = 0;
         PreparePlayingBoard();
         StateHasChanged();
         _turningEnabled = true;
@@ -321,7 +319,7 @@
         _level++;
         _score = _winningScore;
         _winningScore = 3 * _winningScore;
-        _gridSize = Convert.ToInt32(Math.Round(1.5 * _gridSize, 0,mode: MidpointRounding.ToPositiveInfinity));
+        _gridSize = Convert.ToInt32(Math.Round(1.3 * _gridSize, 0,mode: MidpointRounding.ToPositiveInfinity));
         PreparePlayingBoard();
     }
 

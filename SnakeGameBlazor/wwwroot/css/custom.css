@@ -1,0 +1,18 @@
+﻿body {
+}
+.imageGrid {
+    display: flex;
+    align-items: center;
+    justify-content: center
+}
+
+.imgContainer {
+    max-width: 400px;
+    max-height: 700px;
+    overflow: hidden;
+}
+
+    .imgContainer img {
+        width: 100%;
+        min-height: 100%;
+    }
