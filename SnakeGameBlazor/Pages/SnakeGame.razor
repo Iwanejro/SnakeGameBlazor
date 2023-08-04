@@ -42,9 +42,10 @@
     private Snake _snake = new Snake();
     private List<Cell> _edge = new List<Cell>();
     private Cell _kebabCell = new Cell();
+    private static Random _randomGenerator = new Random();
     private const int _initialGridSize = 13;
     private const int _initialWinningScore = 40;
-    private int _kebabFrequency = 2;
+    private int _kebabChance = 15;
     private int _gridSize = _initialGridSize;
     private int _winningScore = _initialWinningScore;
     private int _score;
@@ -213,7 +214,7 @@
                 {
                     WinLevel();
                 }
-                else if (_score%_kebabFrequency == 0)
+                else if (ThePlayerIsLucky())
                 {
                     SpawnFood(GridColors.Kebab);
                     _kebabTimeLeft = 2*_gridSize;
@@ -234,16 +235,15 @@
 
     private void SpawnFood(string foodName)
     {
-        var generator = new Random();
         var foodCell = new Cell
             {
-                x = generator.Next(1, _gridSize-2),
-                y = generator.Next(1, _gridSize-2)
+                x = _randomGenerator.Next(1, _gridSize-2),
+                y = _randomGenerator.Next(1, _gridSize - 2)
             };
         while (_snake.SnakeCells.Any(snakeCell => snakeCell.x == foodCell.x && snakeCell.y == foodCell.y) || _cells.Find(c => c.x == foodCell.x && c.y == foodCell.y).Color == GridColors.Beer)
         {
-            foodCell.x = generator.Next(1, _gridSize - 2);
-            foodCell.y = generator.Next(1, _gridSize - 2);
+            foodCell.x = _randomGenerator.Next(1, _gridSize - 2);
+            foodCell.y = _randomGenerator.Next(1, _gridSize - 2);
         }
 
         _cells.Find(c => c.x == foodCell.x && c.y == foodCell.y).Color = foodName;
@@ -254,6 +254,19 @@
             _kebabCell.y = foodCell.y;
         }
     }
+
+    private bool ThePlayerIsLucky()
+    {
+        var result = _randomGenerator.Next(1,100);
+        if (result <= _kebabChance)
+        {
+            return true;
+        }else
+        {
+            return false;
+        }
+    }
+
 
     private async void GameOver()
     {
@@ -473,4 +486,5 @@
         MakeCellsGreen();
         StateHasChanged();
     }
+
 }
