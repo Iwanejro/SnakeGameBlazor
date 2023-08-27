@@ -1,4 +1,5 @@
 ﻿using SnakeGameBlazor.Constants;
+using SnakeGameBlazor.Contracts;
 using static System.Formats.Asn1.AsnWriter;
 
 namespace SnakeGameBlazor.Data
@@ -28,7 +29,7 @@ namespace SnakeGameBlazor.Data
         {
             if (SnakeCells.Count > 0)
             {
-                SnakeCells.RemoveAll(c => c.x >= -1);
+                SnakeCells.Clear();
             }
             Head.x = Convert.ToInt32(Math.Round((double)(gridSize / 2), mode: MidpointRounding.ToEven));
             Head.y = Convert.ToInt32(Math.Round((double)(gridSize / 2), mode: MidpointRounding.ToEven));
@@ -48,8 +49,9 @@ namespace SnakeGameBlazor.Data
             cells.Find(c => c.x == Head.x && c.y == Head.y).Color = GridColors.EyesDown;
         }
 
-        public void MoveSnakeBody()
+        public void MoveBody()
         {
+
             Tail.x = SnakeCells[Length - 1].x;
             Tail.y = SnakeCells[Length - 1].y;
 
@@ -60,7 +62,26 @@ namespace SnakeGameBlazor.Data
             }
         }
 
-        public void MoveSnakeHead(string direction)
+        public void HideTail(List<Cell> cells)
+        {
+            cells.Find(c => c.x == Tail.x && c.y == Tail.y).Color = GridColors.Green;
+        }
+
+        public void Shorten(int cellsCount)
+        {
+            if (cellsCount < Length)
+            {
+                for (int i = 0; i < cellsCount; i++)
+                {
+                    SnakeCells.RemoveAt(SnakeCells.Count-1);
+                    Tail.x = SnakeCells[Length - 1].x;
+                    Tail.y = SnakeCells[Length - 1].y;
+                }
+            }
+
+        }
+
+        public void MoveHead(string direction)
         {
             switch (direction)
             {
@@ -124,7 +145,6 @@ namespace SnakeGameBlazor.Data
             {
                 cells.Find(c => c.x == cell.x && c.y == cell.y).Color = color;
             }
-            cells.Find(c => c.x == Tail.x && c.y == Tail.y).Color = color;
         }
     }
 }

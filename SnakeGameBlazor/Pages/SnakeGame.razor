@@ -91,22 +91,14 @@
 
     async Task NextAction()
     {
-        _snake.MoveSnakeBody();
-
-        _snake.MoveSnakeHead(_direction);
-
+        _snake.MoveBody();
+        _snake.MoveHead(_direction);
         CheckSnakeHeadPosition();
 
         if (_isRunning)
         {
-
-            for (int i = 1; i < _snake.Length; i++)
-            {
-                _cells.Find(c => c.x == _snake.SnakeCells[i].x && c.y == _snake.SnakeCells[i].y).Color = GridColors.Blue;
-            }
-
+            _snake.ChangeSnakeColor(GridColors.Blue, _cells);
             _snake.ChangeSnakeHeadPicture(_cells);
-
             _movesCount++;
             DeleteKebabOrDecreaseKebabTimeLeft();
         }
@@ -224,11 +216,11 @@
 
             case GridColors.Kebab:
                 _score += 10;
-                _cells.Find(c => c.x == _snake.Tail.x && c.y == _snake.Tail.y).Color = GridColors.Green;
+                _snake.HideTail(_cells);
                 break;
 
             case GridColors.Green:
-                _cells.Find(c => c.x == _snake.Tail.x && c.y == _snake.Tail.y).Color = GridColors.Green;
+                _snake.HideTail(_cells);
                 break;
         }
     }
@@ -270,6 +262,7 @@
 
     private async void GameOver()
     {
+        _snake.HideTail(_cells);
         _isRunning = false;
         _turningEnabled = false;
         await FlashSnake();
