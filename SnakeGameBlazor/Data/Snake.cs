@@ -1,4 +1,5 @@
-﻿using SnakeGameBlazor.Constants;
+﻿using Microsoft.AspNetCore.Components;
+using SnakeGameBlazor.Constants;
 using SnakeGameBlazor.Contracts;
 using static System.Formats.Asn1.AsnWriter;
 
@@ -13,11 +14,13 @@ namespace SnakeGameBlazor.Data
         public int Speed { get; set; }
         public string HeadDirection { get; set; }
 
-        public static int InitialLenght = 2;
-        public static int InitialSpeed = 350;
+        public static int InitialLenght;
+        public static int InitialSpeed;
 
-        public Snake()
+        public Snake(int initialLength, int initialSpeed)
         {
+            InitialLenght = initialLength;
+            InitialSpeed = initialSpeed;
             SnakeCells = new List<Cell>();
             Head = new Cell();
             Tail = new Cell();

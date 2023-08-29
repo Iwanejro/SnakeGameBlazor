@@ -39,7 +39,7 @@
 </div>
 @code {
     private ListCells _cells = new ListCells(_initialGridSize);
-    private Snake _snake = new Snake();
+    private Snake _snake = new Snake(3, 300);
     private List<Cell> _edge = new List<Cell>();
     private Cell _kebabCell = new Cell();
     private static Random _randomGenerator = new Random();
@@ -309,6 +309,7 @@
                 _cells.Get(_snake.SnakeCells[1].x, _snake.SnakeCells[1].y).Color = GridColors.EyesRight;
                 break;
         }
+        
         StateHasChanged();
         await Task.Delay(2000);
 
