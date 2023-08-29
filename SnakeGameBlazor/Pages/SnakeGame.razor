@@ -18,7 +18,7 @@
                     @for (int j = 0; j < _gridSize; j++)
                     {
                         <div class="col p-0" style="max-width:@(BoardSize/_gridSize + "px")">
-                            <img src=@("/images/"+ _cells.Find(c => c.x == j && c.y == i-1).Color) class="img-fluid"/>
+                            <img src=@("/images/"+ _cells.Get(j, i-1).Color) class="img-fluid"/>
                         </div>
                     }
                 </div>
@@ -38,14 +38,14 @@
     </div>
 </div>
 @code {
-    private List<Cell> _cells = new List<Cell>();
-    private Snake _snake = new Snake();
-    private List<Cell> _edge = new List<Cell>();
+    private ArrayCells _cells = new ArrayCells(_initialGridSize);
+    //private ListCells _cells = new ListCells(_initialGridSize);
+    private Snake _snake = new Snake(3, 300);
     private Cell _kebabCell = new Cell();
     private static Random _randomGenerator = new Random();
     private const int _initialGridSize = 13;
-    private const int _initialWinningScore = 40;
-    private int _kebabChance = 15;
+    private const int _initialWinningScore = 10;
+    private int _kebabChance = 50;
     private int _gridSize = _initialGridSize;
     private int _winningScore = _initialWinningScore;
     private int _score;
@@ -80,13 +80,20 @@
 
     private async Task PreparePlayingBoard()
     {
-        InitializeCells();
-        await MakeCellsGreen();
-        MakeEdgeBlack();
-        _snake.InitializeSnake(_gridSize, _cells);
-        SpawnFood(GridColors.Beer);
-        _turningEnabled = true;
-        StateHasChanged();
+        try
+        {
+            await _cells.Initialize(_gridSize);
+            _cells.MakeEdgeBlack();
+            _snake.InitializeSnake(_gridSize, _cells);
+            SpawnFood(GridColors.Beer);
+            _turningEnabled = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+        
     }
 
     async Task NextAction()
@@ -145,48 +152,9 @@
 
     }
 
-    private async Task MakeCellsGreen()
-    {
-        var cells = _cells.Where(c => c.x >= 1 && c.y >= 1 && c.x <= _gridSize - 2 && c.y <= _gridSize - 2);
-        foreach (var cell in cells)
-        {
-            cell.Color = GridColors.Green;
-        }
-
-    }
-
-    private void InitializeCells()
-    {
-        if (_cells.Count > 0)
-        {
-            _cells.Clear();
-        }
-
-        for (int i = 0; i < _gridSize; i++)
-        {
-            for (int j = 0; j < _gridSize; j++)
-            {
-                _cells.Add(new Cell
-                    {
-                        x = i,
-                        y = j,
-            });
-            }
-        }
-    }
-
-    private void MakeEdgeBlack()
-    {
-        var cells = _cells.Where(c => c.x == 0 || c.y == 0 || c.x == _gridSize-1 || c.y == _gridSize-1);
-        foreach (var cell in cells)
-        {
-            cell.Color = GridColors.Black;
-        }
-    }
-
     private async void CheckSnakeHeadPosition()
     {
-        switch (_cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color)
+        switch (_cells.Get(_snake.Head.x, _snake.Head.y).Color)
         {
             case GridColors.Blue:
             case GridColors.Black:
@@ -232,13 +200,13 @@
                 x = _randomGenerator.Next(1, _gridSize-2),
                 y = _randomGenerator.Next(1, _gridSize - 2)
             };
-        while (_snake.SnakeCells.Any(snakeCell => snakeCell.x == foodCell.x && snakeCell.y == foodCell.y) || _cells.Find(c => c.x == foodCell.x && c.y == foodCell.y).Color == GridColors.Beer)
+        while (_snake.SnakeCells.Any(snakeCell => snakeCell.x == foodCell.x && snakeCell.y == foodCell.y) || _cells.Get(foodCell.x, foodCell.y).Color == GridColors.Beer)
         {
             foodCell.x = _randomGenerator.Next(1, _gridSize - 2);
             foodCell.y = _randomGenerator.Next(1, _gridSize - 2);
         }
 
-        _cells.Find(c => c.x == foodCell.x && c.y == foodCell.y).Color = foodName;
+        _cells.Get(foodCell.x, foodCell.y).Color = foodName;
 
         if (foodName == GridColors.Kebab)
         {
@@ -258,7 +226,6 @@
             return false;
         }
     }
-
 
     private async void GameOver()
     {
@@ -294,14 +261,14 @@
 
     private void DeleteKebabOrDecreaseKebabTimeLeft()
     {
-        if (_cells.Any(c => c.Color == GridColors.Kebab))
+        if (_cells.Any(GridColors.Kebab))
         {
             if (_kebabTimeLeft > 0)
             {
                 _kebabTimeLeft--;
             }else
             {
-                _cells.Find(c => c.x == _kebabCell.x && c.y == _kebabCell.y).Color = GridColors.Green;
+                _cells.Get(_kebabCell.x, _kebabCell.y).Color = GridColors.Green;
             }
         }
     }
@@ -314,7 +281,7 @@
 
         for (int i = 0; i < 3; i++)
         {
-            await MakeCellsGreen();
+            await _cells.MakeCellsGreen();
             StateHasChanged();
             await WriteCongrats();
             StateHasChanged();
@@ -331,32 +298,33 @@
 
     private async Task SnakeGoingIntoHoleAnimation()
     {
-        _cells.Find(c => c.x == _snake.Head.x && c.y == _snake.Head.y).Color = GridColors.Hole;
+        _cells.Get(_snake.Head.x, _snake.Head.y).Color = GridColors.Hole;
         switch (_snake.HeadDirection)
         {
             case Directions.Up:
-                _cells.Find(c => c.x == _snake.SnakeCells[1].x && c.y == _snake.SnakeCells[1].y).Color = GridColors.EyesUp;
+                _cells.Get(_snake.SnakeCells[1].x, _snake.SnakeCells[1].y).Color = GridColors.EyesUp;
                 break;
 
             case Directions.Down:
-                _cells.Find(c => c.x == _snake.SnakeCells[1].x && c.y == _snake.SnakeCells[1].y).Color = GridColors.EyesDown;
+                _cells.Get(_snake.SnakeCells[1].x, _snake.SnakeCells[1].y).Color = GridColors.EyesDown;
                 break;
 
             case Directions.Left:
-                _cells.Find(c => c.x == _snake.SnakeCells[1].x && c.y == _snake.SnakeCells[1].y).Color = GridColors.EyesLeft;
+                _cells.Get(_snake.SnakeCells[1].x, _snake.SnakeCells[1].y).Color = GridColors.EyesLeft;
                 break;
 
             case Directions.Right:
-                _cells.Find(c => c.x == _snake.SnakeCells[1].x && c.y == _snake.SnakeCells[1].y).Color = GridColors.EyesRight;
+                _cells.Get(_snake.SnakeCells[1].x, _snake.SnakeCells[1].y).Color = GridColors.EyesRight;
                 break;
         }
+        
         StateHasChanged();
         await Task.Delay(2000);
 
-        _cells.Find(c => c.x == _snake.SnakeCells[1].x && c.y == _snake.SnakeCells[1].y).Color = GridColors.Blue;
+        _cells.Get(_snake.SnakeCells[1].x, _snake.SnakeCells[1].y).Color = GridColors.Blue;
         for (int i = _snake.Length-1; i >0 ; i--)
         {
-            _cells.Find(c => c.x == _snake.SnakeCells[i].x && c.y == _snake.SnakeCells[i].y).Color = GridColors.Green;
+            _cells.Get(_snake.SnakeCells[i].x, _snake.SnakeCells[i].y).Color = GridColors.Green;
             StateHasChanged();
             await Task.Delay(100);
         }
@@ -372,11 +340,11 @@
 
         for (int i = -4, j=0; i < 4; i++, j++)
         {
-            _cells.Find(c => c.x == middle.x + i && c.y == middle.y+4).Color = inscription[j].ToString() + ".png";
+            _cells.Get(middle.x + i, middle.y+4).Color = inscription[j].ToString() + ".png";
             StateHasChanged();
             await Task.Delay(80);
         }
-        _cells.Find(c => c.x == middle.x + 4 && c.y == middle.y + 4).Color = Letters.ExclamationMark;
+        _cells.Get(middle.x + 4, middle.y + 4).Color = Letters.ExclamationMark;
         StateHasChanged();
         await Task.Delay(150);
 
@@ -393,15 +361,15 @@
 
         for (int i = -5, j = 0; i < 0; i++, j++)
         {
-            _cells.Find(c => c.x == middle.x + i && c.y == middle.y + 2).Color = inscription[j].ToString() + ".png";
+            _cells.Get(middle.x + i, middle.y + 2).Color = inscription[j].ToString() + ".png";
         }
-        _cells.Find(c => c.x == middle.x + 1 && c.y == middle.y + 2).Color = "2.png";
+        _cells.Get(middle.x + 1, middle.y + 2).Color = "2.png";
 
         inscription = "FOR";
 
         for (int i = 3, j = 0; i < 6; i++, j++)
         {
-            _cells.Find(c => c.x == middle.x + i && c.y == middle.y + 2).Color = inscription[j].ToString() + ".png";
+            _cells.Get(middle.x + i, middle.y + 2).Color = inscription[j].ToString() + ".png";
         }
 
         StateHasChanged();
@@ -423,7 +391,7 @@
 
         foreach (var cell in cellsToChange)
         {
-            _cells.Find(c => c.x == cell.x && c.y == cell.y).Color = cell.Color;
+            _cells.Get(cell.x, cell.y).Color = cell.Color;
         }
 
         StateHasChanged();
@@ -448,7 +416,7 @@
 
         foreach (var cell in cellsToChange)
         {
-            _cells.Find(c => c.x == cell.x && c.y == cell.y).Color = cell.Color;
+            _cells.Get(cell.x, cell.y).Color = cell.Color;
         }
         StateHasChanged();
         await Task.Delay(1000);
@@ -470,13 +438,13 @@
 
         foreach (var cell in cellsToChange)
         {
-            _cells.Find(c => c.x == cell.x && c.y == cell.y).Color = cell.Color;
+            _cells.Get(cell.x, cell.y).Color = cell.Color;
         }
 
         StateHasChanged();
         await Task.Delay(1000);
 
-        MakeCellsGreen();
+        _cells.MakeCellsGreen();
         StateHasChanged();
     }
 
