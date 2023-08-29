@@ -8,5 +8,6 @@ namespace SnakeGameBlazor.Contracts
         bool Any(string gridColor);
         Task MakeCellsGreen();
         void MakeEdgeBlack();
+        Task Initialize(int gridSize);
     }
 }

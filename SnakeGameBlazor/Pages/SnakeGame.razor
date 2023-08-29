@@ -38,14 +38,14 @@
     </div>
 </div>
 @code {
-    private ListCells _cells = new ListCells(_initialGridSize);
+    private ArrayCells _cells = new ArrayCells(_initialGridSize);
+    //private ListCells _cells = new ListCells(_initialGridSize);
     private Snake _snake = new Snake(3, 300);
-    private List<Cell> _edge = new List<Cell>();
     private Cell _kebabCell = new Cell();
     private static Random _randomGenerator = new Random();
     private const int _initialGridSize = 13;
-    private const int _initialWinningScore = 40;
-    private int _kebabChance = 15;
+    private const int _initialWinningScore = 10;
+    private int _kebabChance = 50;
     private int _gridSize = _initialGridSize;
     private int _winningScore = _initialWinningScore;
     private int _score;
@@ -80,12 +80,20 @@
 
     private async Task PreparePlayingBoard()
     {
-        await _cells.MakeCellsGreen();
-        _cells.MakeEdgeBlack();
-        _snake.InitializeSnake(_gridSize, _cells);
-        SpawnFood(GridColors.Beer);
-        _turningEnabled = true;
-        StateHasChanged();
+        try
+        {
+            await _cells.Initialize(_gridSize);
+            _cells.MakeEdgeBlack();
+            _snake.InitializeSnake(_gridSize, _cells);
+            SpawnFood(GridColors.Beer);
+            _turningEnabled = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+        
     }
 
     async Task NextAction()

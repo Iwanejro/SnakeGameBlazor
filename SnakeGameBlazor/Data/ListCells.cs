@@ -17,6 +17,7 @@ namespace SnakeGameBlazor.Data
                     {
                         x = i,
                         y = j,
+                        Color = GridColors.Green
                     });
                 }
             }
@@ -51,6 +52,27 @@ namespace SnakeGameBlazor.Data
         public bool Any(string gridColor)
         {
             return _cells.Any(cell => cell.Color == gridColor);
+        }
+
+        public async Task Initialize(int gridSize)
+        {
+            _gridSize = gridSize;
+
+            if (_cells.Count>0)
+                _cells.Clear();
+
+            for (int i = 0; i < gridSize; i++)
+            {
+                for (int j = 0; j < gridSize; j++)
+                {
+                    _cells.Add(new Cell
+                    {
+                        x = i,
+                        y = j,
+                        Color = GridColors.Green
+                    });
+                }
+            }
         }
     }
 }
