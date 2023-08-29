@@ -1,6 +1,12 @@
-﻿namespace SnakeGameBlazor.Contracts
+﻿using SnakeGameBlazor.Data;
+
+namespace SnakeGameBlazor.Contracts
 {
     public interface ICells
     {
+        Cell Get(int x, int y);
+        bool Any(string gridColor);
+        Task MakeCellsGreen();
+        void MakeEdgeBlack();
     }
 }
