@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnakeGameBlazor", "SnakeGameBlazor\SnakeGameBlazor.csproj", "{380107A3-231E-4CA9-B101-6D0FDC096FED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SnakeGameBlazor", "SnakeGameBlazor\SnakeGameBlazor.csproj", "{380107A3-231E-4CA9-B101-6D0FDC096FED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnakeGameBlazorTests", "SnakeGameBlazorTests\SnakeGameBlazorTests.csproj", "{702C35B6-9982-4FE8-AF88-8A3E88BCD567}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{380107A3-231E-4CA9-B101-6D0FDC096FED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{380107A3-231E-4CA9-B101-6D0FDC096FED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{380107A3-231E-4CA9-B101-6D0FDC096FED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{702C35B6-9982-4FE8-AF88-8A3E88BCD567}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{702C35B6-9982-4FE8-AF88-8A3E88BCD567}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{702C35B6-9982-4FE8-AF88-8A3E88BCD567}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{702C35B6-9982-4FE8-AF88-8A3E88BCD567}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
