@@ -19,6 +19,11 @@ namespace SnakeGameBlazor.Data
 
         public Snake(int initialLength, int initialSpeed)
         {
+            if (initialLength < 1 || initialSpeed < 1)
+            {
+                throw new ArgumentOutOfRangeException("Snake length and snake speed cannot be less than 1");
+            }
+
             InitialLenght = initialLength;
             InitialSpeed = initialSpeed;
             SnakeCells = new List<Cell>();
@@ -49,7 +54,7 @@ namespace SnakeGameBlazor.Data
                 });
 
             }
-            
+
             cells.Get(Head.x, Head.y).Color = GridColors.EyesDown;
         }
 
@@ -112,7 +117,7 @@ namespace SnakeGameBlazor.Data
             }
 
         }
-        
+
         public void MakeSnakeLonger()
         {
             SnakeCells.Add(new Cell
