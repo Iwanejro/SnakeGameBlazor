@@ -8,7 +8,11 @@ namespace SnakeGameBlazor.Data
     public class Snake
     {
         public List<Cell> SnakeCells { get; set; }
-        public Cell Head { get; set; }
+        public Cell Head
+        {
+            get => SnakeCells[0];
+            set { }
+        }
         public Cell Tail { get; set; }
         public int Length { get; set; }
         public int Speed { get; set; }
@@ -39,21 +43,19 @@ namespace SnakeGameBlazor.Data
             {
                 SnakeCells.Clear();
             }
-            Head.x = Convert.ToInt32(Math.Round((double)(gridSize / 2), mode: MidpointRounding.ToEven));
-            Head.y = Convert.ToInt32(Math.Round((double)(gridSize / 2), mode: MidpointRounding.ToEven));
-
-            Tail.x = Head.x;
-            Tail.y = Head.y;
 
             for (int i = 0; i < Length; i++)
             {
                 SnakeCells.Add(new Cell
                 {
-                    x = Head.x,
-                    y = Head.y
+                    x = Convert.ToInt32(Math.Round((double)(gridSize / 2), mode: MidpointRounding.ToEven)),
+                    y = Convert.ToInt32(Math.Round((double)(gridSize / 2), mode: MidpointRounding.ToEven))
                 });
 
             }
+
+            Tail.x = Head.x;
+            Tail.y = Head.y;
 
             cells.Get(Head.x, Head.y).Color = GridColors.EyesDown;
         }
@@ -95,8 +97,6 @@ namespace SnakeGameBlazor.Data
                     HeadDirection = Directions.Right;
                     break;
             }
-            Head.x = SnakeCells[0].x;
-            Head.y = SnakeCells[0].y;
         }
 
         public void HideTail(ICells cells)
