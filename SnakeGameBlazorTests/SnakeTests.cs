@@ -97,6 +97,87 @@ namespace SnakeGameBlazorTests
             Assert.AreEqual(GridColors.EyesDown, headCell.Color);
         }
 
+        [Test]
+        public void MoveBody_WhenCalled_ShouldSetTheTailPositionToTheLastElementOfSnakeCellsBeforeMoving()
+        {
+            // Arrange
+            _cut.SnakeCells.AddRange(new List<Cell>
+            {
+                new Cell { x = 3, y = 4 },
+                new Cell { x = 2, y = 4 },
+                new Cell { x = 2, y = 3 },
+                new Cell { x = 2, y = 2 }
+            });
+            _cut.Length = 4;
+            var lastSnakeCellX = _cut.SnakeCells[_cut.Length - 1].x;
+            var lastSnakeCellY = _cut.SnakeCells[_cut.Length - 1].y;
+
+            // Act
+            _cut.MoveBody();
+
+            // Assert
+            Assert.AreEqual(_cut.Tail.x, lastSnakeCellX);
+            Assert.AreEqual(_cut.Tail.y, lastSnakeCellY);
+        }
+
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        public void MoveBody_WhenCalled_ShouldMoveEverySnakeCellExceptHeadToThePositionOfThePreviousCell(int examinedCellNumber)
+        {
+            // Arrange
+            _cut.SnakeCells.AddRange(new List<Cell>
+            {
+                new Cell { x = 3, y = 4 },
+                new Cell { x = 2, y = 4 },
+                new Cell { x = 2, y = 3 },
+                new Cell { x = 2, y = 2 }
+            });
+            _cut.Length = 4;
+                
+            var positionOfTheCellPrecedingTheExaminedOneBeforeMoving = new int[2] { _cut.SnakeCells[examinedCellNumber-1].x, _cut.SnakeCells[examinedCellNumber-1].y };
+
+            // Act
+            _cut.MoveBody();
+            var newPositionOfTheExaminedCell = new int[2] { _cut.SnakeCells[examinedCellNumber].x, _cut.SnakeCells[examinedCellNumber].y };
+
+            // Assert
+            Assert.AreEqual(positionOfTheCellPrecedingTheExaminedOneBeforeMoving, newPositionOfTheExaminedCell);
+        }
+
+        [Test]
+        public void MoveBody_WhenCalled_ShouldNotMoveSnakeHead()
+        {
+            // Arrange
+            _cut.SnakeCells.AddRange(new List<Cell>
+            {
+                new Cell { x = 3, y = 4 },
+                new Cell { x = 2, y = 4 },
+                new Cell { x = 2, y = 3 },
+                new Cell { x = 2, y = 2 }
+            });
+            _cut.Length = 4;
+
+            var snakeHeadPositionBeforeMoving = new int[2] { _cut.SnakeCells[0].x, _cut.SnakeCells[0].y };
+
+            // Act
+            _cut.MoveBody();
+            var snakeHeadPositionAfterMoving = new int[2] { _cut.SnakeCells[0].x, _cut.SnakeCells[0].y };
+
+            // Assert
+            Assert.AreEqual(snakeHeadPositionBeforeMoving, snakeHeadPositionAfterMoving);
+        }
+
+        
 
     }
+
+    // Arrange
+
+
+    // Act
+
+
+    // Assert
+
 }
