@@ -159,9 +159,42 @@ namespace SnakeGameBlazorTests
             Assert.AreEqual(snakeHeadPositionBeforeMoving, snakeHeadPositionAfterMoving);
         }
 
-        public void MoveHead_WhenCalled_ShouldMoveTheFirstSnakeCellInTheRightDirection(string direction)
+        [TestCase(Directions.Up, 0, 1)]
+        [TestCase(Directions.Down, 0, -1)]
+        [TestCase(Directions.Left, -1, 0)]
+        [TestCase(Directions.Right, 1, 0)]
+        public void MoveHead_WhenCalled_ShouldMoveTheFirstSnakeCellInTheRightDirection(string direction, int horizontalValue, int verticalValue)
         {
+            // Arrange
+            AddSampleSnakeCells();
+            var snakeHeadPositionBeforeMovement = new int[2] { _cut.Head.x, _cut.Head.y };
 
+            // Act
+            _cut.MoveHead(direction);
+            var expectedSnakeHeadPositionAfterMovement = new int[2] { 
+                snakeHeadPositionBeforeMovement[0] + horizontalValue,
+                snakeHeadPositionBeforeMovement[1] + verticalValue 
+            };
+            var newSnakeHeadPosition = new int[2] { _cut.Head.x, _cut.Head.y };
+
+            // Assert
+            Assert.AreEqual(expectedSnakeHeadPositionAfterMovement, newSnakeHeadPosition);
+        }
+
+        [TestCase(Directions.Up)]
+        [TestCase(Directions.Down)]
+        [TestCase(Directions.Left)]
+        [TestCase(Directions.Right)]
+        public void MoveHead_WhenCalled_ShouldSetTheSnakeHeadInTheRightDirection(string moveDirection)
+        {
+            // Arrange
+            AddSampleSnakeCells();
+
+            // Act
+            _cut.MoveHead(moveDirection);
+            
+            // Assert
+            Assert.AreEqual(moveDirection, _cut.HeadDirection);
         }
 
     }
