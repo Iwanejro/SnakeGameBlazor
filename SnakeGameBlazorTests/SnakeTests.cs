@@ -21,6 +21,18 @@ namespace SnakeGameBlazorTests
             _cellsMock = new Mock<ICells>();
         }
 
+        public void AddSampleSnakeCells()
+        {
+            _cut.SnakeCells.AddRange(new List<Cell>
+            {
+                new Cell { x = 3, y = 4 },
+                new Cell { x = 2, y = 4 },
+                new Cell { x = 2, y = 3 },
+                new Cell { x = 2, y = 2 }
+            });
+            _cut.Length = 4;
+        }
+
         [Test]
         public void InitializeSnake_IfThereAreAnyExistingSnakeCells_ShouldClearSnakeCellsBeforeCreatingNewOnes()
         {
@@ -101,14 +113,7 @@ namespace SnakeGameBlazorTests
         public void MoveBody_WhenCalled_ShouldSetTheTailPositionToTheLastElementOfSnakeCellsBeforeMoving()
         {
             // Arrange
-            _cut.SnakeCells.AddRange(new List<Cell>
-            {
-                new Cell { x = 3, y = 4 },
-                new Cell { x = 2, y = 4 },
-                new Cell { x = 2, y = 3 },
-                new Cell { x = 2, y = 2 }
-            });
-            _cut.Length = 4;
+            AddSampleSnakeCells();
             var lastSnakeCellX = _cut.SnakeCells[_cut.Length - 1].x;
             var lastSnakeCellY = _cut.SnakeCells[_cut.Length - 1].y;
 
@@ -126,15 +131,8 @@ namespace SnakeGameBlazorTests
         public void MoveBody_WhenCalled_ShouldMoveEverySnakeCellExceptHeadToThePositionOfThePreviousCell(int examinedCellNumber)
         {
             // Arrange
-            _cut.SnakeCells.AddRange(new List<Cell>
-            {
-                new Cell { x = 3, y = 4 },
-                new Cell { x = 2, y = 4 },
-                new Cell { x = 2, y = 3 },
-                new Cell { x = 2, y = 2 }
-            });
-            _cut.Length = 4;
-                
+            AddSampleSnakeCells();
+
             var positionOfTheCellPrecedingTheExaminedOneBeforeMoving = new int[2] { _cut.SnakeCells[examinedCellNumber-1].x, _cut.SnakeCells[examinedCellNumber-1].y };
 
             // Act
@@ -149,14 +147,7 @@ namespace SnakeGameBlazorTests
         public void MoveBody_WhenCalled_ShouldNotMoveSnakeHead()
         {
             // Arrange
-            _cut.SnakeCells.AddRange(new List<Cell>
-            {
-                new Cell { x = 3, y = 4 },
-                new Cell { x = 2, y = 4 },
-                new Cell { x = 2, y = 3 },
-                new Cell { x = 2, y = 2 }
-            });
-            _cut.Length = 4;
+            AddSampleSnakeCells();
 
             var snakeHeadPositionBeforeMoving = new int[2] { _cut.SnakeCells[0].x, _cut.SnakeCells[0].y };
 
@@ -168,7 +159,10 @@ namespace SnakeGameBlazorTests
             Assert.AreEqual(snakeHeadPositionBeforeMoving, snakeHeadPositionAfterMoving);
         }
 
-        
+        public void MoveHead_WhenCalled_ShouldMoveTheFirstSnakeCellInTheRightDirection(string direction)
+        {
+
+        }
 
     }
 
