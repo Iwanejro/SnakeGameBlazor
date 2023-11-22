@@ -3,6 +3,8 @@ using NUnit.Framework;
 using SnakeGameBlazor.Constants;
 using SnakeGameBlazor.Contracts;
 using SnakeGameBlazor.Data;
+using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
 
 namespace SnakeGameBlazorTests
 {
@@ -197,6 +199,67 @@ namespace SnakeGameBlazorTests
             Assert.AreEqual(moveDirection, _cut.HeadDirection);
         }
 
+        [Test]
+        public void HideTail_WhenCalled_ShouldSetTheTailColorToGreen()
+        {
+            //Arrange
+            var testCell = new Cell { Color = GridColors.Black };
+            _cellsMock.Setup(mock => mock.Get(_cut.Tail.x, _cut.Tail.y)).Returns(testCell);
+
+            //Act
+            _cut.HideTail(_cellsMock.Object);
+
+            //Assert
+            Assert.AreEqual(GridColors.Green, testCell.Color);
+        }
+
+        [Test]
+        public void MakeSnakeLonger_WhenCalled_ShouldAddOneSnakeCellAndIncrementTheSnakeLengthBy1()
+        {
+            // Arrange
+            var originalSnakeCellsCount = _cut.SnakeCells.Count();
+            var originalSnakeLength = _cut.Length;
+
+            // Act
+            _cut.MakeSnakeLonger();
+
+            // Assert
+            Assert.AreEqual(originalSnakeCellsCount + 1, _cut.SnakeCells.Count());
+            Assert.AreEqual(originalSnakeLength + 1, _cut.Length);
+        }
+
+        [Test]
+        public void MakeSnakeLonger_WhenCalled_TheLastSnakeCellShouldHaveTheSameCoordinatesAsTheSnakeTail()
+        {
+            // Arrange
+            var snakeTailCoordinates = new int[2] {_cut.Tail.x, _cut.Tail.y };
+
+            // Act
+            _cut.MakeSnakeLonger();
+            var lastSnakeCellCoordinates = new int[2] { _cut.SnakeCells[_cut.SnakeCells.Count - 1].x, _cut.SnakeCells[_cut.SnakeCells.Count - 1].y };
+
+            // Assert
+            Assert.AreEqual(snakeTailCoordinates, lastSnakeCellCoordinates);
+        }
+
+        [TestCase(Directions.Up, GridColors.EyesUp)]
+        [TestCase(Directions.Down, GridColors.EyesDown)]
+        [TestCase(Directions.Left, GridColors.EyesLeft)]
+        [TestCase(Directions.Right, GridColors.EyesRight)]
+        public void ChangeSnakeHeadPicture_WhenCalled_ShouldSetTheCorrectSnakeHeadColorDependingOnTheHeadDirection(string headDirection, string expectedHeadColor)
+        {
+            // Arrange
+            AddSampleSnakeCells();
+            _cut.HeadDirection = headDirection;
+            var testCell = new Cell { Color = GridColors.Red };
+            _cellsMock.Setup(mock => mock.Get(_cut.Head.x, _cut.Head.y)).Returns(testCell);
+
+            // Act
+            _cut.ChangeSnakeHeadPicture(_cellsMock.Object);
+
+            // Assert
+            Assert.AreEqual(expectedHeadColor, testCell.Color);
+        }
     }
 
     // Arrange
