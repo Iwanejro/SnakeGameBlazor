@@ -260,6 +260,27 @@ namespace SnakeGameBlazorTests
             // Assert
             Assert.AreEqual(expectedHeadColor, testCell.Color);
         }
+
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        public void ChangeSnakeColor_WhenCalled_ShouldChangeColorOfEveryGameCellBelongingToTheSnake(int snakeCellNumber)
+        {
+            // Arrange
+            AddSampleSnakeCells();
+            foreach (var cell in _cut.SnakeCells)
+            {
+                cell.Color = GridColors.Green;
+                _cellsMock.Setup(mock => mock.Get(cell.x, cell.y)).Returns(cell);
+            }
+
+            // Act
+            _cut.ChangeSnakeColor(GridColors.Blue, _cellsMock.Object);
+
+            // Assert
+            Assert.AreEqual(GridColors.Blue, _cut.SnakeCells[snakeCellNumber].Color);
+        }
     }
 
     // Arrange
